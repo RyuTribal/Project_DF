@@ -41,6 +41,8 @@ public:
 		void Dodge();
 	UFUNCTION()
 		void StopDodge();
+	UFUNCTION()
+		void ResetDodge();
 
 
 protected:
@@ -55,7 +57,13 @@ protected:
 		bool IsDodging;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Dodge")
+		bool CanDodge;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Dodge")
 		float DodgeDelay;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Dodge")
+		float DodgeCooldown;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 		bool CanMove;

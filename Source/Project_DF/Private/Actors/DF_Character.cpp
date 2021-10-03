@@ -39,10 +39,13 @@ ADF_Character::ADF_Character()
 
 	CanMove = true;
 	IsDodging = false;
+	CanDodge = true;
 
 	DodgeDistance = 2500.0f;
 
 	DodgeDelay = 0.2f;
+
+	DodgeCooldown = 0.1f;
 
 }
 
@@ -106,23 +109,31 @@ void ADF_Character::MoveRight(float Axis)
 void ADF_Character::Dodge()
 {
 	UCharacterMovementComponent* cMove = GetCharacterMovement(); // Gets the character movement so that we can check if falling or the velocity ect
-	if (!IsDodging && !cMove->IsFalling()) {
-		DefaultFriction = cMove->BrakingFrictionFactor;
-		cMove->BrakingFrictionFactor = 0.f;
+	if (CanDodge && !cMove->IsFalling()) {	// Don't wanna be able to dodge when falling
+		DefaultFriction = cMove->BrakingFrictionFactor;	
+		cMove->BrakingFrictionFactor = 0.f; //Removes friction since it messes with how far the character can be launched
 		LaunchCharacter(FVector(GetActorForwardVector().X, GetActorForwardVector().Y, 0.f).GetSafeNormal() * DodgeDistance, true, true);
 		IsDodging = true;
 		CanMove = false;
-		GetWorldTimerManager().SetTimer(UnusedHandle, this, &ADF_Character::StopDodge, DodgeDelay, false);
+		CanDodge = false;
+		GetWorldTimerManager().SetTimer(UnusedHandle, this, &ADF_Character::StopDodge, DodgeDelay, false); //A timer to delay movement and make sure the dodge is executed
 	}
 }
 
 void ADF_Character::StopDodge()
 {
-	UCharacterMovementComponent* cMove = GetCharacterMovement();
-	cMove->StopMovementImmediately();
+
+	GetCharacterMovement()->StopMovementImmediately(); // This is more of a safety meassure so that no movement is performed before the dodge is complete
 	IsDodging = false;
 	CanMove = true;
-	cMove->BrakingFrictionFactor = DefaultFriction;
+	GetCharacterMovement()->BrakingFrictionFactor = DefaultFriction; // Gives friction back to the character
+	GetWorldTimerManager().SetTimer(UnusedHandle, this, &ADF_Character::ResetDodge, DodgeCooldown, false); // make the dodge have a cool down so people can't spam it
+	
+}
+
+void ADF_Character::ResetDodge()
+{
+	CanDodge = true;
 }
 
 
