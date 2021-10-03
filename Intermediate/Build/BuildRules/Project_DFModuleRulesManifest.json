@@ -1,0 +1,8 @@
+{
+	"SourceFiles": [
+		"C:\\Unreal_Projects\\Project_DF\\Source\\Project_DF\\Project_DF.Build.cs",
+		"C:\\Unreal_Projects\\Project_DF\\Source\\Project_DF.Target.cs",
+		"C:\\Unreal_Projects\\Project_DF\\Source\\Project_DFEditor.Target.cs"
+	],
+	"EngineVersion": "4.27.0"
+}

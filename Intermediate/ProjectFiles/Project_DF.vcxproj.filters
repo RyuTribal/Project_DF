@@ -1,0 +1,77 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="16.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <None Include="..\..\Project_DF.uproject" />
+    <Filter Include="Source">
+      <UniqueIdentifier>{1EEBEDDB-3E37-47A8-8F1A-913E759B4056}</UniqueIdentifier>
+    </Filter>
+    <None Include="..\..\Source\Project_DF.Target.cs">
+      <Filter>Source</Filter>
+    </None>
+    <None Include="..\..\Source\Project_DFEditor.Target.cs">
+      <Filter>Source</Filter>
+    </None>
+    <None Include="..\..\.ignore" />
+    <None Include="..\..\Project_DF.code-workspace" />
+    <Filter Include="Config">
+      <UniqueIdentifier>{8225021C-06F5-4A45-9BBE-E8ACE6CFD9A5}</UniqueIdentifier>
+    </Filter>
+    <None Include="..\..\Config\DefaultEditor.ini">
+      <Filter>Config</Filter>
+    </None>
+    <None Include="..\..\Config\DefaultEditorPerProjectUserSettings.ini">
+      <Filter>Config</Filter>
+    </None>
+    <None Include="..\..\Config\DefaultEngine.ini">
+      <Filter>Config</Filter>
+    </None>
+    <None Include="..\..\Config\DefaultGame.ini">
+      <Filter>Config</Filter>
+    </None>
+    <None Include="..\..\Config\DefaultInput.ini">
+      <Filter>Config</Filter>
+    </None>
+    <Filter Include="Source\Project_DF">
+      <UniqueIdentifier>{DBFC6464-0AD5-4A6F-B4E8-A4FF04BAE689}</UniqueIdentifier>
+    </Filter>
+    <None Include="..\..\Source\Project_DF\Project_DF.Build.cs">
+      <Filter>Source\Project_DF</Filter>
+    </None>
+    <ClCompile Include="..\..\Source\Project_DF\Project_DF.cpp">
+      <Filter>Source\Project_DF</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\Source\Project_DF\Project_DF.h">
+      <Filter>Source\Project_DF</Filter>
+    </ClInclude>
+    <Filter Include="Source\Project_DF\Private">
+      <UniqueIdentifier>{812AC3D9-A0D2-409E-A2EB-796849DE5CF8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Project_DF\Private\Actors">
+      <UniqueIdentifier>{69B04DF4-734D-4CF3-9046-C3BD16FD60A6}</UniqueIdentifier>
+    </Filter>
+    <ClCompile Include="..\..\Source\Project_DF\Private\Actors\DF_Character.cpp">
+      <Filter>Source\Project_DF\Private\Actors</Filter>
+    </ClCompile>
+    <Filter Include="Source\Project_DF\Private\GameModes">
+      <UniqueIdentifier>{5774CF54-3D32-4B92-97DA-E832A098B773}</UniqueIdentifier>
+    </Filter>
+    <ClCompile Include="..\..\Source\Project_DF\Private\GameModes\DF_WrathGM.cpp">
+      <Filter>Source\Project_DF\Private\GameModes</Filter>
+    </ClCompile>
+    <Filter Include="Source\Project_DF\Public">
+      <UniqueIdentifier>{EE500F74-ED4E-42EC-A3F3-7013A016F0ED}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Project_DF\Public\Actors">
+      <UniqueIdentifier>{0505C9D3-4265-45A7-AE92-E0E883125FF6}</UniqueIdentifier>
+    </Filter>
+    <ClInclude Include="..\..\Source\Project_DF\Public\Actors\DF_Character.h">
+      <Filter>Source\Project_DF\Public\Actors</Filter>
+    </ClInclude>
+    <Filter Include="Source\Project_DF\Public\GameModes">
+      <UniqueIdentifier>{298D1E54-1163-4131-8765-10D932518680}</UniqueIdentifier>
+    </Filter>
+    <ClInclude Include="..\..\Source\Project_DF\Public\GameModes\DF_WrathGM.h">
+      <Filter>Source\Project_DF\Public\GameModes</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
