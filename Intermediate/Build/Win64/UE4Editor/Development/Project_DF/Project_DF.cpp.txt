@@ -1,2 +1,0 @@
-C:\Unreal_Projects\Project_DF\Intermediate\Build\Win64\UE4Editor\Development\Project_DF\Definitions.Project_DF.h
-C:\Unreal_Projects\Project_DF\Source\Project_DF\Project_DF.h
