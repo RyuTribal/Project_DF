@@ -40,9 +40,9 @@ ADF_Character::ADF_Character()
 	CanMove = true;
 	IsDodging = false;
 
-	DodgeDistance = 6000.0f;
+	DodgeDistance = 2500.0f;
 
-	DodgeDelay = 0.1f;
+	DodgeDelay = 0.2f;
 
 }
 
