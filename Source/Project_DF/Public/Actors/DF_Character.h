@@ -44,11 +44,11 @@ public:
 	UFUNCTION()
 		void ResetDodge();
 	UFUNCTION()
-		void HandleChangeMovement();
+		void HandleChangeMovement(); //Handles different variables that are affected by change in character movement
 	UFUNCTION()
-		void StartIdleAnim();
+		void StartIdleAnim();		// Changes the idle animation variables
 	UFUNCTION()
-		void ResetIdleAnim();
+		void ResetIdleAnim();		// Resets the idle animation variables
 
 
 protected:

@@ -66,7 +66,6 @@ void ADF_Character::BeginPlay()
 void ADF_Character::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("Current idle anim %d"), RandomIdleValue));
 
 }
 
@@ -78,7 +77,7 @@ void ADF_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 	// For camera movement
 	PlayerInputComponent->BindAxis("Turn", this, &APawn::AddControllerYawInput);
 	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
-
+	// These axis commands are always fired at tick. Very important to remember
 	PlayerInputComponent->BindAxis("MoveForward", this, &ADF_Character::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &ADF_Character::MoveRight);
 
@@ -118,8 +117,13 @@ void ADF_Character::MoveRight(float Axis)
 void ADF_Character::HandleChangeMovement()
 {
 	UCharacterMovementComponent* cMove = GetCharacterMovement();
-	if (cMove->Velocity.Size() == 0.f)
+	if (cMove->Velocity.Size() == 0.f) //If the character is still
 	{
+		/*
+		 * This variable is mostly so that the character can
+		 * return into it's default idle animation for some time.
+		 * This is affected by the IdleOffset variable
+		 */ 
 		if (CanEnterIdle)
 		{
 			CanEnterIdle = false;
@@ -136,7 +140,11 @@ void ADF_Character::HandleChangeMovement()
 
 void ADF_Character::StartIdleAnim()
 {
-	RandomIdleValue = FMath::RandRange(1, 2);
+	/*
+	 * Generates a random number which is used by the
+	 * animation blueprint to choose a random idle animation
+	 */ 
+	RandomIdleValue = FMath::RandRange(1, 2);		
 	GetWorldTimerManager().SetTimer(UnusedMovementHandle, this, &ADF_Character::ResetIdleAnim, 5.f, false);
 }
 
