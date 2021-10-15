@@ -43,6 +43,12 @@ public:
 		void StopDodge();
 	UFUNCTION()
 		void ResetDodge();
+	UFUNCTION()
+		void HandleChangeMovement();
+	UFUNCTION()
+		void StartIdleAnim();
+	UFUNCTION()
+		void ResetIdleAnim();
 
 
 protected:
@@ -67,8 +73,18 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 		bool CanMove;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Movement")
+		bool IsMoving;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Movement")
+		bool CanEnterIdle;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Movement")
+		int RandomIdleValue;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Movement")
+		float IdleOffset;
 	UPROPERTY()
-		FTimerHandle UnusedHandle;
+		FTimerHandle UnusedDodgeHandle;
+	UPROPERTY()
+		FTimerHandle UnusedMovementHandle;
 	UPROPERTY()
 		float DefaultFriction;
 

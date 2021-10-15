@@ -4,6 +4,7 @@
 #include "Actors/DF_Character.h"
 #include "Gameframework/CharacterMovementComponent.h"
 #include "Runtime/Engine/Public/TimerManager.h"
+#include "Math/UnrealMathUtility.h"
 // Sets default values
 ADF_Character::ADF_Character()
 {
@@ -40,12 +41,17 @@ ADF_Character::ADF_Character()
 	CanMove = true;
 	IsDodging = false;
 	CanDodge = true;
+	IsMoving = false;
 
 	DodgeDistance = 2500.0f;
 
 	DodgeDelay = 0.2f;
 
 	DodgeCooldown = 0.1f;
+
+	IdleOffset = 3.5f; // Time before starting a random idle animation in seconds
+	RandomIdleValue = 0;
+	CanEnterIdle = true;
 
 }
 
@@ -60,7 +66,7 @@ void ADF_Character::BeginPlay()
 void ADF_Character::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	
+	//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("Current idle anim %d"), RandomIdleValue));
 
 }
 
@@ -86,6 +92,7 @@ void ADF_Character::MoveForward(float Axis)
 {
 	if(CanMove)
 	{
+		HandleChangeMovement();
 		const FRotator Rotation = Controller->GetControlRotation();
 		const FRotator YawRotation(0, Rotation.Yaw, 0);
 
@@ -98,12 +105,46 @@ void ADF_Character::MoveRight(float Axis)
 {
 	if (CanMove)
 	{
+		HandleChangeMovement();
 		const FRotator Rotation = Controller->GetControlRotation();
 		const FRotator YawRotation(0, Rotation.Yaw, 0);
 
 		const FVector RDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 		AddMovementInput(RDirection, Axis);
+		
 	}
+}
+
+void ADF_Character::HandleChangeMovement()
+{
+	UCharacterMovementComponent* cMove = GetCharacterMovement();
+	if (cMove->Velocity.Size() == 0.f)
+	{
+		if (CanEnterIdle)
+		{
+			CanEnterIdle = false;
+			GetWorldTimerManager().SetTimer(UnusedMovementHandle, this, &ADF_Character::StartIdleAnim, IdleOffset, false);
+		}
+		IsMoving = false;
+	}
+	else
+	{
+		IsMoving = true;
+		ResetIdleAnim();
+	}
+}
+
+void ADF_Character::StartIdleAnim()
+{
+	RandomIdleValue = FMath::RandRange(1, 2);
+	GetWorldTimerManager().SetTimer(UnusedMovementHandle, this, &ADF_Character::ResetIdleAnim, 5.f, false);
+}
+
+void ADF_Character::ResetIdleAnim()
+{
+	CanEnterIdle = true;
+	RandomIdleValue = 0;
+	GetWorld()->GetTimerManager().ClearTimer(UnusedMovementHandle);
 }
 
 void ADF_Character::Dodge()
@@ -116,7 +157,7 @@ void ADF_Character::Dodge()
 		IsDodging = true;
 		CanMove = false;
 		CanDodge = false;
-		GetWorldTimerManager().SetTimer(UnusedHandle, this, &ADF_Character::StopDodge, DodgeDelay, false); //A timer to delay movement and make sure the dodge is executed
+		GetWorldTimerManager().SetTimer(UnusedDodgeHandle, this, &ADF_Character::StopDodge, DodgeDelay, false); //A timer to delay movement and make sure the dodge is executed
 	}
 }
 
@@ -127,13 +168,14 @@ void ADF_Character::StopDodge()
 	IsDodging = false;
 	CanMove = true;
 	GetCharacterMovement()->BrakingFrictionFactor = DefaultFriction; // Gives friction back to the character
-	GetWorldTimerManager().SetTimer(UnusedHandle, this, &ADF_Character::ResetDodge, DodgeCooldown, false); // make the dodge have a cool down so people can't spam it
+	GetWorldTimerManager().SetTimer(UnusedDodgeHandle, this, &ADF_Character::ResetDodge, DodgeCooldown, false); // make the dodge have a cool down so people can't spam it
 	
 }
 
 void ADF_Character::ResetDodge()
 {
 	CanDodge = true;
+	GetWorld()->GetTimerManager().ClearTimer(UnusedDodgeHandle);
 }
 
 
