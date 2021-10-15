@@ -52,6 +52,9 @@ ADF_Character::ADF_Character()
 	IdleOffset = 3.5f; // Time before starting a random idle animation in seconds
 	RandomIdleValue = 0;
 	CanEnterIdle = true;
+	JogSpeed = 600.f;
+	SprintSpeed = 1000.f;
+	IsRunning = false;
 
 }
 
@@ -83,7 +86,8 @@ void ADF_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 
 	// different inputs
 	PlayerInputComponent->BindAction("Roll", IE_Pressed, this, &ADF_Character::Dodge);
-
+	PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &ADF_Character::Sprint);
+	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &ADF_Character::Jog);
 
 }
 
@@ -136,6 +140,18 @@ void ADF_Character::HandleChangeMovement()
 		IsMoving = true;
 		ResetIdleAnim();
 	}
+}
+
+void ADF_Character::Sprint()
+{
+	GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
+	IsRunning = true;
+}
+
+void ADF_Character::Jog()
+{
+	GetCharacterMovement()->MaxWalkSpeed = JogSpeed;
+	IsRunning = false;
 }
 
 void ADF_Character::StartIdleAnim()

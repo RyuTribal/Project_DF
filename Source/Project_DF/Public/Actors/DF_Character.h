@@ -49,6 +49,10 @@ public:
 		void StartIdleAnim();		// Changes the idle animation variables
 	UFUNCTION()
 		void ResetIdleAnim();		// Resets the idle animation variables
+	UFUNCTION()
+		void Sprint();
+	UFUNCTION()
+		void Jog();
 
 
 protected:
@@ -78,9 +82,15 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Movement")
 		bool CanEnterIdle;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Movement")
+		bool IsRunning;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Movement")
 		int RandomIdleValue;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Movement")
 		float IdleOffset;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Movement")
+		float SprintSpeed;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Movement")
+		float JogSpeed;
 	UPROPERTY()
 		FTimerHandle UnusedDodgeHandle;
 	UPROPERTY()
