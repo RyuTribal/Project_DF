@@ -22,7 +22,15 @@ protected:
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Attributes")
 		float BaseDamage;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Attributes")
+		int id;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mesh")
 		USkeletalMeshComponent* WeaponMesh;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animations")
+		UAnimMontage* UnSheathe;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animations")
+		UAnimMontage* Sheathe;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animations")
+		UAnimMontage* Dodge;
 
 };
