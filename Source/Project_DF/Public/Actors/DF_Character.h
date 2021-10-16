@@ -13,6 +13,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/Controller.h"
 #include "Blueprint/UserWidget.h"
+#include "WeaponBase.h"
 #include "DF_Character.generated.h"
 
 
@@ -43,6 +44,12 @@ public:
 		void StopDodge();
 	UFUNCTION()
 		void ResetDodge();
+	UFUNCTION()
+		void HandleChangeMovement(); //Handles different variables that are affected by change in character movement
+	UFUNCTION()
+		void Sprint();
+	UFUNCTION()
+		void Jog();
 
 
 protected:
@@ -67,10 +74,26 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 		bool CanMove;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Movement")
+		bool IsMoving;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Movement")
+		bool CanEnterIdle;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Movement")
+		bool IsRunning;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Movement")
+		float SprintSpeed;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Movement")
+		float JogSpeed;
 	UPROPERTY()
-		FTimerHandle UnusedHandle;
+		FTimerHandle UnusedDodgeHandle;
+	UPROPERTY()
+		FTimerHandle UnusedMovementHandle;
 	UPROPERTY()
 		float DefaultFriction;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
+		TSubclassOf<AWeaponBase> Weapon;
+	UPROPERTY(BlueprintReadWrite)
+		AWeaponBase* WeaponPtr;
 
 public:
 	// Called every frame

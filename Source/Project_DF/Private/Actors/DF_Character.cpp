@@ -4,6 +4,7 @@
 #include "Actors/DF_Character.h"
 #include "Gameframework/CharacterMovementComponent.h"
 #include "Runtime/Engine/Public/TimerManager.h"
+#include "Math/UnrealMathUtility.h"
 // Sets default values
 ADF_Character::ADF_Character()
 {
@@ -40,12 +41,17 @@ ADF_Character::ADF_Character()
 	CanMove = true;
 	IsDodging = false;
 	CanDodge = true;
+	IsMoving = false;
 
 	DodgeDistance = 2500.0f;
 
 	DodgeDelay = 0.2f;
 
 	DodgeCooldown = 0.1f;
+	CanEnterIdle = true;
+	JogSpeed = 600.f;
+	SprintSpeed = 1000.f;
+	IsRunning = false;
 
 }
 
@@ -53,6 +59,12 @@ ADF_Character::ADF_Character()
 void ADF_Character::BeginPlay()
 {
 	Super::BeginPlay();
+	FVector Location(0.0f, 0.0f, 0.0f);
+	FRotator Rotation(0.0f, 0.0f, 0.0f);
+	FActorSpawnParameters SpawnInfo;
+	AWeaponBase* PlayerWeapon = GetWorld()->SpawnActor<AWeaponBase>(Weapon, Location, Rotation, SpawnInfo);
+	PlayerWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("greatsword-sheathe"));
+	WeaponPtr = PlayerWeapon;
 	
 }
 
@@ -60,7 +72,6 @@ void ADF_Character::BeginPlay()
 void ADF_Character::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	
 
 }
 
@@ -72,13 +83,14 @@ void ADF_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 	// For camera movement
 	PlayerInputComponent->BindAxis("Turn", this, &APawn::AddControllerYawInput);
 	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
-
+	// These axis commands are always fired at tick. Very important to remember
 	PlayerInputComponent->BindAxis("MoveForward", this, &ADF_Character::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &ADF_Character::MoveRight);
 
 	// different inputs
 	PlayerInputComponent->BindAction("Roll", IE_Pressed, this, &ADF_Character::Dodge);
-
+	PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &ADF_Character::Sprint);
+	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &ADF_Character::Jog);
 
 }
 
@@ -86,6 +98,7 @@ void ADF_Character::MoveForward(float Axis)
 {
 	if(CanMove)
 	{
+		HandleChangeMovement();
 		const FRotator Rotation = Controller->GetControlRotation();
 		const FRotator YawRotation(0, Rotation.Yaw, 0);
 
@@ -98,12 +111,39 @@ void ADF_Character::MoveRight(float Axis)
 {
 	if (CanMove)
 	{
+		HandleChangeMovement();
 		const FRotator Rotation = Controller->GetControlRotation();
 		const FRotator YawRotation(0, Rotation.Yaw, 0);
 
 		const FVector RDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 		AddMovementInput(RDirection, Axis);
+		
 	}
+}
+
+void ADF_Character::HandleChangeMovement()
+{
+	UCharacterMovementComponent* cMove = GetCharacterMovement();
+	if (cMove->Velocity.Size() == 0.f) //If the character is still
+	{
+		IsMoving = false;
+	}
+	else
+	{
+		IsMoving = true;
+	}
+}
+
+void ADF_Character::Sprint()
+{
+	GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
+	IsRunning = true;
+}
+
+void ADF_Character::Jog()
+{
+	GetCharacterMovement()->MaxWalkSpeed = JogSpeed;
+	IsRunning = false;
 }
 
 void ADF_Character::Dodge()
@@ -116,7 +156,7 @@ void ADF_Character::Dodge()
 		IsDodging = true;
 		CanMove = false;
 		CanDodge = false;
-		GetWorldTimerManager().SetTimer(UnusedHandle, this, &ADF_Character::StopDodge, DodgeDelay, false); //A timer to delay movement and make sure the dodge is executed
+		GetWorldTimerManager().SetTimer(UnusedDodgeHandle, this, &ADF_Character::StopDodge, DodgeDelay, false); //A timer to delay movement and make sure the dodge is executed
 	}
 }
 
@@ -127,13 +167,14 @@ void ADF_Character::StopDodge()
 	IsDodging = false;
 	CanMove = true;
 	GetCharacterMovement()->BrakingFrictionFactor = DefaultFriction; // Gives friction back to the character
-	GetWorldTimerManager().SetTimer(UnusedHandle, this, &ADF_Character::ResetDodge, DodgeCooldown, false); // make the dodge have a cool down so people can't spam it
+	GetWorldTimerManager().SetTimer(UnusedDodgeHandle, this, &ADF_Character::ResetDodge, DodgeCooldown, false); // make the dodge have a cool down so people can't spam it
 	
 }
 
 void ADF_Character::ResetDodge()
 {
 	CanDodge = true;
+	GetWorld()->GetTimerManager().ClearTimer(UnusedDodgeHandle);
 }
 
 
