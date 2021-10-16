@@ -55,6 +55,7 @@ ADF_Character::ADF_Character()
 	SprintSpeed = 1000.f;
 	IsRunning = false;
 	IsEquipped = false;
+	IsSheathing = false;
 
 }
 
@@ -158,20 +159,31 @@ void ADF_Character::HandleEquip()
 	UAnimInstance* Animations = GetMesh()->GetAnimInstance();
 	if(IsEquipped && WeaponPtr)
 	{
-		Animations->Montage_Play(WeaponPtr->Sheathe, 1.f);
-		FOnMontageEnded CompleteDelegate;
-		CompleteDelegate.BindUObject(this, &ADF_Character::OnEquipInterrupt);
-		Animations->Montage_SetEndDelegate(CompleteDelegate, WeaponPtr->Sheathe);
+		if(!IsSheathing)
+		{
+			IsEquipped = false;
+			IsSheathing = true;
+			Animations->Montage_Play(WeaponPtr->Sheathe, 1.f);
+			FOnMontageEnded CompleteDelegate;
+			CompleteDelegate.BindUObject(this, &ADF_Character::OnEquipInterrupt);
+			Animations->Montage_SetEndDelegate(CompleteDelegate, WeaponPtr->Sheathe);
+		}
+		
 	}
 	else
 	{
-		EquippedWeapon = WeaponPtr->id;
-		Animations->Montage_Play(WeaponPtr->UnSheathe, 1.f);
-		FOnMontageEnded CompleteDelegate;
-		CompleteDelegate.BindUObject(this, &ADF_Character::OnEquipInterrupt);
-		Animations->Montage_SetEndDelegate(CompleteDelegate, WeaponPtr->UnSheathe);
+		if(!IsSheathing)
+		{
+			IsEquipped = true;
+			IsSheathing = true;
+			EquippedWeapon = WeaponPtr->id;
+			Animations->Montage_Play(WeaponPtr->UnSheathe, 1.f);
+			FOnMontageEnded CompleteDelegate;
+			CompleteDelegate.BindUObject(this, &ADF_Character::OnEquipInterrupt);
+			Animations->Montage_SetEndDelegate(CompleteDelegate, WeaponPtr->UnSheathe);
+		}
+		
 	}
-	IsEquipped = !IsEquipped;
 }
 
 void ADF_Character::OnEquipInterrupt(UAnimMontage* animMontage, bool bInterrupted)
@@ -184,6 +196,7 @@ void ADF_Character::OnEquipInterrupt(UAnimMontage* animMontage, bool bInterrupte
 	{
 		WeaponPtr->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("greatsword-sheathe"));
 	}
+	IsSheathing = false;
 }
 
 void ADF_Character::Dodge()

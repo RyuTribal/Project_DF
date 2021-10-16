@@ -104,6 +104,8 @@ protected:
 		TSubclassOf<AWeaponBase> Weapon;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 		int EquippedWeapon;
+	UPROPERTY()
+		bool IsSheathing;
 	UPROPERTY(BlueprintReadWrite)
 		AWeaponBase* WeaponPtr;
 
