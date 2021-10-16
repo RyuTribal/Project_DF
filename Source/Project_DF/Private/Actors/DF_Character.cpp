@@ -48,9 +48,6 @@ ADF_Character::ADF_Character()
 	DodgeDelay = 0.2f;
 
 	DodgeCooldown = 0.1f;
-
-	IdleOffset = 3.5f; // Time before starting a random idle animation in seconds
-	RandomIdleValue = 0;
 	CanEnterIdle = true;
 	JogSpeed = 600.f;
 	SprintSpeed = 1000.f;
@@ -62,6 +59,12 @@ ADF_Character::ADF_Character()
 void ADF_Character::BeginPlay()
 {
 	Super::BeginPlay();
+	FVector Location(0.0f, 0.0f, 0.0f);
+	FRotator Rotation(0.0f, 0.0f, 0.0f);
+	FActorSpawnParameters SpawnInfo;
+	AWeaponBase* PlayerWeapon = GetWorld()->SpawnActor<AWeaponBase>(Weapon, Location, Rotation, SpawnInfo);
+	PlayerWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("greatsword-sheathe"));
+	WeaponPtr = PlayerWeapon;
 	
 }
 
@@ -123,22 +126,11 @@ void ADF_Character::HandleChangeMovement()
 	UCharacterMovementComponent* cMove = GetCharacterMovement();
 	if (cMove->Velocity.Size() == 0.f) //If the character is still
 	{
-		/*
-		 * This variable is mostly so that the character can
-		 * return into it's default idle animation for some time.
-		 * This is affected by the IdleOffset variable
-		 */ 
-		if (CanEnterIdle)
-		{
-			CanEnterIdle = false;
-			GetWorldTimerManager().SetTimer(UnusedMovementHandle, this, &ADF_Character::StartIdleAnim, IdleOffset, false);
-		}
 		IsMoving = false;
 	}
 	else
 	{
 		IsMoving = true;
-		ResetIdleAnim();
 	}
 }
 
@@ -152,23 +144,6 @@ void ADF_Character::Jog()
 {
 	GetCharacterMovement()->MaxWalkSpeed = JogSpeed;
 	IsRunning = false;
-}
-
-void ADF_Character::StartIdleAnim()
-{
-	/*
-	 * Generates a random number which is used by the
-	 * animation blueprint to choose a random idle animation
-	 */ 
-	RandomIdleValue = FMath::RandRange(1, 2);		
-	GetWorldTimerManager().SetTimer(UnusedMovementHandle, this, &ADF_Character::ResetIdleAnim, 5.f, false);
-}
-
-void ADF_Character::ResetIdleAnim()
-{
-	CanEnterIdle = true;
-	RandomIdleValue = 0;
-	GetWorld()->GetTimerManager().ClearTimer(UnusedMovementHandle);
 }
 
 void ADF_Character::Dodge()
