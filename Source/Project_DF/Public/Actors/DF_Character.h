@@ -50,6 +50,10 @@ public:
 		void Sprint();
 	UFUNCTION()
 		void Jog();
+	UFUNCTION()
+		void HandleEquip();
+	UFUNCTION()
+		void OnEquipInterrupt(UAnimMontage* animMontage, bool bInterrupted);
 
 
 protected:
@@ -84,14 +88,22 @@ protected:
 		float SprintSpeed;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Movement")
 		float JogSpeed;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Movement")
+		UAnimMontage* DefaultDodge;
+
 	UPROPERTY()
 		FTimerHandle UnusedDodgeHandle;
 	UPROPERTY()
 		FTimerHandle UnusedMovementHandle;
 	UPROPERTY()
 		float DefaultFriction;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Weapon")
+		bool IsEquipped;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
 		TSubclassOf<AWeaponBase> Weapon;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+		int EquippedWeapon;
 	UPROPERTY(BlueprintReadWrite)
 		AWeaponBase* WeaponPtr;
 

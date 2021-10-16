@@ -15,6 +15,8 @@ ADF_Character::ADF_Character()
 	GetCapsuleComponent()->InitCapsuleSize(42.0f, 96.0f);
 
 
+	DefaultDodge = CreateDefaultSubobject<UAnimMontage>(TEXT("DefaultDodge"));
+
 	// Remove the mouse restrictions on the camera (mouse moves camera not the character)
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
@@ -52,6 +54,7 @@ ADF_Character::ADF_Character()
 	JogSpeed = 600.f;
 	SprintSpeed = 1000.f;
 	IsRunning = false;
+	IsEquipped = false;
 
 }
 
@@ -91,6 +94,7 @@ void ADF_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 	PlayerInputComponent->BindAction("Roll", IE_Pressed, this, &ADF_Character::Dodge);
 	PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &ADF_Character::Sprint);
 	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &ADF_Character::Jog);
+	PlayerInputComponent->BindAction("Equip", IE_Pressed, this, &ADF_Character::HandleEquip);
 
 }
 
@@ -146,10 +150,55 @@ void ADF_Character::Jog()
 	IsRunning = false;
 }
 
+void ADF_Character::HandleEquip()
+{
+	/*
+	 * Animations are taken from the weapon
+	 */
+	UAnimInstance* Animations = GetMesh()->GetAnimInstance();
+	if(IsEquipped && WeaponPtr)
+	{
+		Animations->Montage_Play(WeaponPtr->Sheathe, 1.f);
+		FOnMontageEnded CompleteDelegate;
+		CompleteDelegate.BindUObject(this, &ADF_Character::OnEquipInterrupt);
+		Animations->Montage_SetEndDelegate(CompleteDelegate, WeaponPtr->Sheathe);
+	}
+	else
+	{
+		EquippedWeapon = WeaponPtr->id;
+		Animations->Montage_Play(WeaponPtr->UnSheathe, 1.f);
+		FOnMontageEnded CompleteDelegate;
+		CompleteDelegate.BindUObject(this, &ADF_Character::OnEquipInterrupt);
+		Animations->Montage_SetEndDelegate(CompleteDelegate, WeaponPtr->UnSheathe);
+	}
+	IsEquipped = !IsEquipped;
+}
+
+void ADF_Character::OnEquipInterrupt(UAnimMontage* animMontage, bool bInterrupted)
+{
+	if(IsEquipped && WeaponPtr)
+	{
+		WeaponPtr->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("right_hand_equip"));
+	}
+	else
+	{
+		WeaponPtr->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("greatsword-sheathe"));
+	}
+}
+
 void ADF_Character::Dodge()
 {
 	UCharacterMovementComponent* cMove = GetCharacterMovement(); // Gets the character movement so that we can check if falling or the velocity ect
 	if (CanDodge && !cMove->IsFalling()) {	// Don't wanna be able to dodge when falling
+		GetController()->SetIgnoreMoveInput(true);
+		if (!IsEquipped)
+		{
+			GetMesh()->GetAnimInstance()->Montage_Play(DefaultDodge, 1.f);
+		}
+		else
+		{
+			GetMesh()->GetAnimInstance()->Montage_Play(WeaponPtr->Dodge, 1.f);
+		}
 		DefaultFriction = cMove->BrakingFrictionFactor;	
 		cMove->BrakingFrictionFactor = 0.f; //Removes friction since it messes with how far the character can be launched
 		LaunchCharacter(FVector(GetActorForwardVector().X, GetActorForwardVector().Y, 0.f).GetSafeNormal() * DodgeDistance, true, true);
@@ -166,6 +215,7 @@ void ADF_Character::StopDodge()
 	GetCharacterMovement()->StopMovementImmediately(); // This is more of a safety meassure so that no movement is performed before the dodge is complete
 	IsDodging = false;
 	CanMove = true;
+	GetController()->SetIgnoreMoveInput(false);
 	GetCharacterMovement()->BrakingFrictionFactor = DefaultFriction; // Gives friction back to the character
 	GetWorldTimerManager().SetTimer(UnusedDodgeHandle, this, &ADF_Character::ResetDodge, DodgeCooldown, false); // make the dodge have a cool down so people can't spam it
 	

@@ -10,6 +10,9 @@ AWeaponBase::AWeaponBase()
 	PrimaryActorTick.bCanEverTick = false;
 	BaseDamage = 100.f;
 	WeaponMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("WeaponMesh"));
+	UnSheathe = CreateDefaultSubobject<UAnimMontage>(TEXT("UnSheathe"));
+	Sheathe = CreateDefaultSubobject<UAnimMontage>(TEXT("Sheathe"));
+	Dodge = CreateDefaultSubobject<UAnimMontage>(TEXT("Dodge"));
 	RootComponent = WeaponMesh;
 }
 
