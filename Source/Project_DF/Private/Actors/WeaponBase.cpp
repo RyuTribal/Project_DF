@@ -12,7 +12,7 @@ AWeaponBase::AWeaponBase()
 	WeaponMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("WeaponMesh"));
 	UnSheathe = CreateDefaultSubobject<UAnimMontage>(TEXT("UnSheathe"));
 	Sheathe = CreateDefaultSubobject<UAnimMontage>(TEXT("Sheathe"));
-	Dodge = CreateDefaultSubobject<UAnimMontage>(TEXT("Dodge"));
+	AttackCombo = CreateDefaultSubobject<UAnimMontage>(TEXT("AttackCombo"));
 	RootComponent = WeaponMesh;
 }
 

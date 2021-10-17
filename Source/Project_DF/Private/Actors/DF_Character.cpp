@@ -56,7 +56,7 @@ ADF_Character::ADF_Character()
 	IsRunning = false;
 	IsEquipped = false;
 	IsSheathing = false;
-
+	CurrentAttack = 0;
 }
 
 // Called when the game starts or when spawned
@@ -96,6 +96,7 @@ void ADF_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 	PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &ADF_Character::Sprint);
 	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &ADF_Character::Jog);
 	PlayerInputComponent->BindAction("Equip", IE_Pressed, this, &ADF_Character::HandleEquip);
+	PlayerInputComponent->BindAction("LightAttack", IE_Pressed, this, &ADF_Character::LightAttack);
 
 }
 
@@ -228,6 +229,49 @@ void ADF_Character::ResetDodge()
 {
 	CanDodge = true;
 	GetWorld()->GetTimerManager().ClearTimer(UnusedDodgeHandle);
+}
+
+void ADF_Character::LightAttack()
+{
+	UAnimInstance* Animations = GetMesh()->GetAnimInstance();
+	if(!IsEquipped)
+	{
+		IsEquipped = true;
+		WeaponPtr->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("right_hand_equip"));
+		
+	}
+	if(!Animations->IsAnyMontagePlaying())
+	{
+		IsAttacking = true;
+		CurrentAttack = 1;
+		Animations->Montage_Play(WeaponPtr->AttackCombo, 1.f);
+		FOnMontageEnded BlendOutDelegate;
+		BlendOutDelegate.BindUObject(this, &ADF_Character::OnAttackCompleting);
+		Animations->Montage_SetEndDelegate(BlendOutDelegate, WeaponPtr->AttackCombo);
+	}
+	else
+	{
+		if(Animations->Montage_IsPlaying(WeaponPtr->AttackCombo))
+		{
+			FString CurrentSectionPlaying = Animations->Montage_GetCurrentSection(WeaponPtr->AttackCombo).ToString();
+			FString ReferenceSection = TEXT("ComboWindow_");
+			ReferenceSection.AppendInt(CurrentAttack);
+			if(CurrentSectionPlaying.Equals(ReferenceSection))
+			{
+				FString NextSection = TEXT("Attack_");
+				NextSection.AppendInt(CurrentAttack+1);
+				Animations->Montage_JumpToSection(FName(NextSection), Animations->GetCurrentActiveMontage());
+				CurrentAttack = CurrentAttack + 1;
+			}
+
+		}
+	}
+}
+
+void ADF_Character::OnAttackCompleting(UAnimMontage* animMontage, bool bInterrupted)
+{
+	IsAttacking = false;
+	CurrentAttack = 0;
 }
 
 

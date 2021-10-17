@@ -54,6 +54,10 @@ public:
 		void HandleEquip();
 	UFUNCTION()
 		void OnEquipInterrupt(UAnimMontage* animMontage, bool bInterrupted);
+	UFUNCTION()
+		void OnAttackCompleting(UAnimMontage* animMontage, bool bInterrupted);
+	UFUNCTION()
+		void LightAttack();
 
 
 protected:
@@ -108,6 +112,10 @@ protected:
 		bool IsSheathing;
 	UPROPERTY(BlueprintReadWrite)
 		AWeaponBase* WeaponPtr;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Combat")
+		bool IsAttacking;
+	UPROPERTY()
+		int CurrentAttack;
 
 public:
 	// Called every frame
