@@ -31,6 +31,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animations")
 		UAnimMontage* Sheathe;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animations")
-		UAnimMontage* Dodge;
+		UAnimMontage* AttackCombo;
 
 };
