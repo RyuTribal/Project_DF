@@ -233,31 +233,46 @@ void ADF_Character::ResetDodge()
 
 void ADF_Character::LightAttack()
 {
-	UAnimInstance* Animations = GetMesh()->GetAnimInstance();
+	UAnimInstance* Animations = GetMesh()->GetAnimInstance(); // To be able to handle animations
+	/*
+	 * If the weapon is unequiped, this adds the weapon
+	 * to the socket instantly and changes state to
+	 * equipped so that the player isn't animation
+	 * locked.
+	 */
 	if(!IsEquipped)
 	{
 		IsEquipped = true;
 		WeaponPtr->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("right_hand_equip"));
 		
 	}
+	/*
+	 * If there aren't any montages playing it starts the attack.
+	 */
 	if(!Animations->IsAnyMontagePlaying())
 	{
 		IsAttacking = true;
 		CurrentAttack = 1;
-		Animations->Montage_Play(WeaponPtr->AttackCombo, 1.f);
+		Animations->Montage_Play(WeaponPtr->AttackCombo, 1.f); //Plays the attack montage from the start
 		FOnMontageEnded BlendOutDelegate;
 		BlendOutDelegate.BindUObject(this, &ADF_Character::OnAttackCompleting);
-		Animations->Montage_SetEndDelegate(BlendOutDelegate, WeaponPtr->AttackCombo);
+		Animations->Montage_SetBlendingOutDelegate(BlendOutDelegate, WeaponPtr->AttackCombo); //Since it blends out (smoother transitions) I put a function to handle ending of the combo
 	}
 	else
 	{
-		if(Animations->Montage_IsPlaying(WeaponPtr->AttackCombo))
+		if(Animations->Montage_IsPlaying(WeaponPtr->AttackCombo)) //Checks that the montage is the attack combo
 		{
+			/*
+			 * This chunk checks that the combo is currently in the
+			 * "ComboWindow" state. You can check the attack combo montage to see
+			 * how the animations are sectioned.
+			 */
 			FString CurrentSectionPlaying = Animations->Montage_GetCurrentSection(WeaponPtr->AttackCombo).ToString();
 			FString ReferenceSection = TEXT("ComboWindow_");
 			ReferenceSection.AppendInt(CurrentAttack);
 			if(CurrentSectionPlaying.Equals(ReferenceSection))
 			{
+				//Skips to the next attack so that it doesn't play the end of an attack.
 				FString NextSection = TEXT("Attack_");
 				NextSection.AppendInt(CurrentAttack+1);
 				Animations->Montage_JumpToSection(FName(NextSection), Animations->GetCurrentActiveMontage());

@@ -58,6 +58,8 @@ public:
 		void OnAttackCompleting(UAnimMontage* animMontage, bool bInterrupted);
 	UFUNCTION()
 		void LightAttack();
+	UPROPERTY(BlueprintReadWrite)
+		AWeaponBase* WeaponPtr;
 
 
 protected:
@@ -110,8 +112,6 @@ protected:
 		int EquippedWeapon;
 	UPROPERTY()
 		bool IsSheathing;
-	UPROPERTY(BlueprintReadWrite)
-		AWeaponBase* WeaponPtr;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Combat")
 		bool IsAttacking;
 	UPROPERTY()
