@@ -15,7 +15,10 @@ void UDF_AttackTracer::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequen
 	if (Player)
 	{
 		Weapon = Player->WeaponPtr->WeaponMesh;
-		ActorsToIgnore = { MeshComp->GetOwner(), Player->WeaponPtr };
+		ActorsToIgnore = { MeshComp->GetOwner(), Player->WeaponPtr }; //All the actors that the sword will ignore
+		/*
+		 * These are the traces that exist inside the weapon. (check their skeletal meshes)
+		 */
 		LastLocation1 = Weapon->GetSocketLocation("Trace1");
 		LastLocation2 = Weapon->GetSocketLocation("Trace2");
 		LastLocation3 = Weapon->GetSocketLocation("Trace3");
@@ -24,11 +27,15 @@ void UDF_AttackTracer::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequen
 void UDF_AttackTracer::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float FrameDeltaTime)
 {
 	if (Player) {
-		for (int j = 0; j < 3; j++) {
-			// Change none on EDebugTrace for drawing out the trace line
+		for (int j = 0; j < 3; j++) { //Loops through the sockets
+			/*
+			 * Makes a box between the traces of the sockets.
+			 * This makes so that even actors inbetween the traces get hit.
+			 */
 			UKismetSystemLibrary::BoxTraceMulti(Player->GetWorld(), LastLocation1, Weapon->GetSocketLocation("Trace" + j), FVector(5, 30, 50), Weapon->GetComponentRotation(), ETraceTypeQuery::TraceTypeQuery4, false, ActorsToIgnore, EDrawDebugTrace::ForDuration, HitResult, true);
 			for (int i = 0; i < HitResult.Num(); i++)
 			{
+				// Applies damage to all hit actors
 				AActor* HitActor = HitResult[i].GetActor();
 				if (!HitActors.Contains(HitActor)) {
 					HitActors.Add(HitActor);
