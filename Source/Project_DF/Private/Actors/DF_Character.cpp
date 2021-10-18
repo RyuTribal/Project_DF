@@ -223,7 +223,7 @@ void ADF_Character::Dodge()
 		
 		DefaultFriction = cMove->BrakingFrictionFactor;	
 		cMove->BrakingFrictionFactor = 0.f; //Removes friction since it messes with how far the character can be launched
-		SetActorRotation(GetDesiredRotation());
+		SetActorRotation(GetDesiredRotation()); // Gets back an input rotation
 		LaunchCharacter(FVector(GetActorForwardVector().X, GetActorForwardVector().Y, 0.f).GetSafeNormal() * DodgeDistance, true, true);
 		IsDodging = true;
 		CanMove = false;
