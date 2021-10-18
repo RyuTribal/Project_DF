@@ -63,6 +63,7 @@ ADF_Character::ADF_Character()
 	IsEquipped = false;
 	IsSheathing = false;
 	CurrentAttack = 0;
+	CanAttack = true;
 }
 
 // Called when the game starts or when spawned
@@ -82,7 +83,6 @@ void ADF_Character::BeginPlay()
 void ADF_Character::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 }
 
 // Called to bind functionality to input
@@ -218,6 +218,7 @@ void ADF_Character::Dodge()
 	UCharacterMovementComponent* cMove = GetCharacterMovement(); // Gets the character movement so that we can check if falling or the velocity ect
 	if (CanDodge && !cMove->IsFalling()) {	// Don't wanna be able to dodge when falling
 		UAnimInstance* Animations = GetMesh()->GetAnimInstance();
+		CanAttack = false;
 		if(IsEquipped)
 		{
 			Animations->Montage_Play(WeaponPtr->Dodge);
@@ -273,6 +274,9 @@ FRotator ADF_Character::GetDesiredRotation()
  */
 void ADF_Character::LightAttack()
 {
+	if (!CanAttack) {
+		return;
+	}
 	UAnimInstance* Animations = GetMesh()->GetAnimInstance(); // To be able to handle animations
 	/*
 	 * If the weapon is unequiped, this adds the weapon
@@ -285,6 +289,10 @@ void ADF_Character::LightAttack()
 		IsEquipped = true;
 		WeaponPtr->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("right_hand_equip"));
 		
+	}
+	if (IsDodging) {
+		StopDodge();
+		StartAttack();
 	}
 	/*
 	 * If there aren't any montages playing it starts the attack.

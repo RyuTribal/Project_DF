@@ -124,6 +124,8 @@ protected:
 		bool IsAttacking;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Combat")
 		int CurrentAttack;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Combat")
+		bool CanAttack;
 
 public:
 	// Called every frame
