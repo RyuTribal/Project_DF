@@ -15,6 +15,7 @@ AWeaponBase::AWeaponBase()
 	AttackCombo = CreateDefaultSubobject<UAnimMontage>(TEXT("AttackCombo"));
 	Dodge = CreateDefaultSubobject<UAnimMontage>(TEXT("Dodge"));
 	RootComponent = WeaponMesh;
+	AmmountLightAttacks = 3;
 }
 
 // Called when the game starts or when spawned

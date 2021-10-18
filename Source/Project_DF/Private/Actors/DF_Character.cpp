@@ -203,6 +203,10 @@ void ADF_Character::OnEquipInterrupt(UAnimMontage* animMontage, bool bInterrupte
 	IsSheathing = false;
 }
 
+/*
+ * Dodge functions
+ */
+
 void ADF_Character::Dodge()
 {
 	UCharacterMovementComponent* cMove = GetCharacterMovement(); // Gets the character movement so that we can check if falling or the velocity ect
@@ -219,8 +223,7 @@ void ADF_Character::Dodge()
 		
 		DefaultFriction = cMove->BrakingFrictionFactor;	
 		cMove->BrakingFrictionFactor = 0.f; //Removes friction since it messes with how far the character can be launched
-		FRotator LastMovementRot = UKismetMathLibrary::MakeRotFromX(GetLastMovementInputVector());
-		SetActorRotation(LastMovementRot);
+		SetActorRotation(GetDesiredRotation());
 		LaunchCharacter(FVector(GetActorForwardVector().X, GetActorForwardVector().Y, 0.f).GetSafeNormal() * DodgeDistance, true, true);
 		IsDodging = true;
 		CanMove = false;
@@ -246,6 +249,22 @@ void ADF_Character::ResetDodge()
 	GetWorld()->GetTimerManager().ClearTimer(UnusedDodgeHandle);
 }
 
+FRotator ADF_Character::GetDesiredRotation()
+{
+	if(!GetLastMovementInputVector().Equals(FVector(0.f,0.f,0.f)))
+	{
+		return UKismetMathLibrary::MakeRotFromX(GetLastMovementInputVector());
+	}
+	else
+	{
+		return GetActorRotation();
+	}
+		
+}
+
+/*
+ * Attack functions
+ */
 void ADF_Character::LightAttack()
 {
 	UAnimInstance* Animations = GetMesh()->GetAnimInstance(); // To be able to handle animations
@@ -266,12 +285,7 @@ void ADF_Character::LightAttack()
 	 */
 	if(!Animations->IsAnyMontagePlaying())
 	{
-		IsAttacking = true;
-		CurrentAttack = 1;
-		Animations->Montage_Play(WeaponPtr->AttackCombo, 1.f); //Plays the attack montage from the start
-		FOnMontageEnded BlendOutDelegate;
-		BlendOutDelegate.BindUObject(this, &ADF_Character::OnAttackCompleting);
-		Animations->Montage_SetBlendingOutDelegate(BlendOutDelegate, WeaponPtr->AttackCombo); //Since it blends out (smoother transitions) I put a function to handle ending of the combo
+		StartAttack();
 	}
 	else
 	{
@@ -288,14 +302,31 @@ void ADF_Character::LightAttack()
 			if(CurrentSectionPlaying.Equals(ReferenceSection))
 			{
 				//Skips to the next attack so that it doesn't play the end of an attack.
+				SetActorRotation(GetDesiredRotation());
 				FString NextSection = TEXT("Attack_");
-				NextSection.AppendInt(CurrentAttack+1);
-				Animations->Montage_JumpToSection(FName(NextSection), Animations->GetCurrentActiveMontage());
 				CurrentAttack = CurrentAttack + 1;
+				if(CurrentAttack > WeaponPtr->AmmountLightAttacks)
+				{
+					CurrentAttack = 1;
+				}
+				NextSection.AppendInt(CurrentAttack);
+				Animations->Montage_JumpToSection(FName(NextSection), Animations->GetCurrentActiveMontage());
 			}
 
 		}
 	}
+}
+
+void ADF_Character::StartAttack()
+{
+	UAnimInstance* Animations = GetMesh()->GetAnimInstance(); // To be able to handle animations
+	IsAttacking = true;
+	SetActorRotation(GetDesiredRotation());
+	CurrentAttack = 1;
+	Animations->Montage_Play(WeaponPtr->AttackCombo, 1.f); //Plays the attack montage from the start
+	FOnMontageEnded BlendOutDelegate;
+	BlendOutDelegate.BindUObject(this, &ADF_Character::OnAttackCompleting);
+	Animations->Montage_SetBlendingOutDelegate(BlendOutDelegate, WeaponPtr->AttackCombo); //Since it blends out (smoother transitions) I put a function to handle ending of the combo
 }
 
 void ADF_Character::OnAttackCompleting(UAnimMontage* animMontage, bool bInterrupted)

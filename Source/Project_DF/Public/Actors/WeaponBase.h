@@ -24,6 +24,8 @@ public:
 		float BaseDamage;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Attributes")
 		int id;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Attributes")
+		int AmmountLightAttacks;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mesh")
 		USkeletalMeshComponent* WeaponMesh;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animations")

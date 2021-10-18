@@ -58,6 +58,10 @@ public:
 		void OnAttackCompleting(UAnimMontage* animMontage, bool bInterrupted);
 	UFUNCTION()
 		void LightAttack();
+	UFUNCTION()
+		void StartAttack();
+	UFUNCTION()
+		virtual FRotator GetDesiredRotation();
 	UPROPERTY(BlueprintReadWrite)
 		AWeaponBase* WeaponPtr;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Dodge")
@@ -113,7 +117,7 @@ protected:
 		bool IsSheathing;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Combat")
 		bool IsAttacking;
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Combat")
 		int CurrentAttack;
 
 public:
