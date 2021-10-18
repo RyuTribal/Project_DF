@@ -4,7 +4,9 @@
 #include "Actors/DF_Character.h"
 #include "Gameframework/CharacterMovementComponent.h"
 #include "Runtime/Engine/Public/TimerManager.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "Math/UnrealMathUtility.h"
+#include "DrawDebugHelpers.h"
 // Sets default values
 ADF_Character::ADF_Character()
 {
@@ -31,6 +33,7 @@ ADF_Character::ADF_Character()
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(RootComponent);
 	CameraBoom->SetRelativeLocation(FVector(0.f, 0.f, 50.f));
+	CameraBoom->SocketOffset = FVector(-160.f, 0.f, 50.f);
 
 	CameraBoom->TargetArmLength = 300.0f; // The length of which the camera is from the player
 	CameraBoom->bUsePawnControlRotation = true; // Mouse moves the arm that is attached to camera
@@ -204,8 +207,20 @@ void ADF_Character::Dodge()
 {
 	UCharacterMovementComponent* cMove = GetCharacterMovement(); // Gets the character movement so that we can check if falling or the velocity ect
 	if (CanDodge && !cMove->IsFalling()) {	// Don't wanna be able to dodge when falling
+		UAnimInstance* Animations = GetMesh()->GetAnimInstance();
+		if(IsEquipped)
+		{
+			Animations->Montage_Play(WeaponPtr->Dodge);
+		}
+		else
+		{
+			Animations->Montage_Play(DefaultDodge);
+		}
+		
 		DefaultFriction = cMove->BrakingFrictionFactor;	
 		cMove->BrakingFrictionFactor = 0.f; //Removes friction since it messes with how far the character can be launched
+		FRotator LastMovementRot = UKismetMathLibrary::MakeRotFromX(GetLastMovementInputVector());
+		SetActorRotation(LastMovementRot);
 		LaunchCharacter(FVector(GetActorForwardVector().X, GetActorForwardVector().Y, 0.f).GetSafeNormal() * DodgeDistance, true, true);
 		IsDodging = true;
 		CanMove = false;

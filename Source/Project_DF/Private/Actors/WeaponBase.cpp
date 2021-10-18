@@ -13,6 +13,7 @@ AWeaponBase::AWeaponBase()
 	UnSheathe = CreateDefaultSubobject<UAnimMontage>(TEXT("UnSheathe"));
 	Sheathe = CreateDefaultSubobject<UAnimMontage>(TEXT("Sheathe"));
 	AttackCombo = CreateDefaultSubobject<UAnimMontage>(TEXT("AttackCombo"));
+	Dodge = CreateDefaultSubobject<UAnimMontage>(TEXT("Dodge"));
 	RootComponent = WeaponMesh;
 }
 

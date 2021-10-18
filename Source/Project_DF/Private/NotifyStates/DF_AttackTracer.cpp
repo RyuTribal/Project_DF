@@ -12,8 +12,9 @@
 void UDF_AttackTracer::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float TotalDuration)
 {
 	Player = Cast<ADF_Character>(MeshComp->GetOwner());
-	if (Player)
+	if (Player && Player->WeaponPtr->WeaponMesh)
 	{
+		Player->CanDodge = false;
 		Weapon = Player->WeaponPtr->WeaponMesh;
 		ActorsToIgnore = { MeshComp->GetOwner(), Player->WeaponPtr }; //All the actors that the sword will ignore
 		/*
@@ -26,7 +27,7 @@ void UDF_AttackTracer::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequen
 }
 void UDF_AttackTracer::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float FrameDeltaTime)
 {
-	if (Player) {
+	if (Player && Player->WeaponPtr->WeaponMesh) {
 		for (int j = 0; j < 3; j++) { //Loops through the sockets
 			/*
 			 * Makes a box between the traces of the sockets.
@@ -49,5 +50,9 @@ void UDF_AttackTracer::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenc
 
 void UDF_AttackTracer::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation)
 {
-	Super::NotifyEnd(MeshComp, Animation);
+	if(Player && Player->WeaponPtr->WeaponMesh)
+	{
+		Player->CanDodge = true;
+	}
+	
 }

@@ -60,6 +60,8 @@ public:
 		void LightAttack();
 	UPROPERTY(BlueprintReadWrite)
 		AWeaponBase* WeaponPtr;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Dodge")
+		bool CanDodge;
 
 
 protected:
@@ -72,9 +74,6 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Dodge")
 		bool IsDodging;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Dodge")
-		bool CanDodge;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Dodge")
 		float DodgeDelay;
