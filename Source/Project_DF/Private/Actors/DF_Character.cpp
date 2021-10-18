@@ -6,6 +6,7 @@
 #include "Runtime/Engine/Public/TimerManager.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Math/UnrealMathUtility.h"
+#include "Actors/Component/TargetSystem.h"
 #include "DrawDebugHelpers.h"
 // Sets default values
 ADF_Character::ADF_Character()
@@ -47,6 +48,8 @@ ADF_Character::ADF_Character()
 	IsDodging = false;
 	CanDodge = true;
 	IsMoving = false;
+	IsLocked = false;
+	CanTrack = true;
 
 	DodgeDistance = 2500.0f;
 
@@ -100,7 +103,7 @@ void ADF_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &ADF_Character::Jog);
 	PlayerInputComponent->BindAction("Equip", IE_Pressed, this, &ADF_Character::HandleEquip);
 	PlayerInputComponent->BindAction("LightAttack", IE_Pressed, this, &ADF_Character::LightAttack);
-
+	PlayerInputComponent->BindAction("TargetLock", IE_Pressed, this, &ADF_Character::TargetLockPressed);
 }
 
 void ADF_Character::MoveForward(float Axis)
@@ -128,6 +131,12 @@ void ADF_Character::MoveRight(float Axis)
 		AddMovementInput(RDirection, Axis);
 		
 	}
+}
+
+void ADF_Character::TargetLockPressed()
+{
+	UTargetSystem* TargetSystem = FindComponentByClass<UTargetSystem>();
+	TargetSystem->TargetActor();
 }
 
 void ADF_Character::HandleChangeMovement()
@@ -161,32 +170,29 @@ void ADF_Character::HandleEquip()
 	 * Animations are taken from the weapon
 	 */
 	UAnimInstance* Animations = GetMesh()->GetAnimInstance();
-	if(IsEquipped && WeaponPtr)
-	{
-		if(!IsSheathing)
-		{
-			IsEquipped = false;
-			IsSheathing = true;
-			Animations->Montage_Play(WeaponPtr->Sheathe, 1.f);
-			FOnMontageEnded CompleteDelegate;
-			CompleteDelegate.BindUObject(this, &ADF_Character::OnEquipInterrupt);
-			Animations->Montage_SetEndDelegate(CompleteDelegate, WeaponPtr->Sheathe);
+
+	if (!Animations->IsAnyMontagePlaying()) {
+		if (IsEquipped && WeaponPtr) {
+			if (!IsSheathing) {
+				IsEquipped = false;
+				IsSheathing = true;
+				Animations->Montage_Play(WeaponPtr->Sheathe, 1.f);
+				FOnMontageEnded CompleteDelegate;
+				CompleteDelegate.BindUObject(this, &ADF_Character::OnEquipInterrupt);
+				Animations->Montage_SetEndDelegate(CompleteDelegate, WeaponPtr->Sheathe);
+			}
 		}
-		
-	}
-	else
-	{
-		if(!IsSheathing)
-		{
-			IsEquipped = true;
-			IsSheathing = true;
-			EquippedWeapon = WeaponPtr->id;
-			Animations->Montage_Play(WeaponPtr->UnSheathe, 1.f);
-			FOnMontageEnded CompleteDelegate;
-			CompleteDelegate.BindUObject(this, &ADF_Character::OnEquipInterrupt);
-			Animations->Montage_SetEndDelegate(CompleteDelegate, WeaponPtr->UnSheathe);
+		else {
+			if (!IsSheathing) {
+				IsEquipped = true;
+				IsSheathing = true;
+				EquippedWeapon = WeaponPtr->id;
+				Animations->Montage_Play(WeaponPtr->UnSheathe, 1.f);
+				FOnMontageEnded CompleteDelegate;
+				CompleteDelegate.BindUObject(this, &ADF_Character::OnEquipInterrupt);
+				Animations->Montage_SetEndDelegate(CompleteDelegate, WeaponPtr->UnSheathe);
+			}
 		}
-		
 	}
 }
 

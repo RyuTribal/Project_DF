@@ -15,6 +15,7 @@ void UDF_AttackTracer::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequen
 	if (Player && Player->WeaponPtr->WeaponMesh)
 	{
 		Player->CanDodge = false;
+		Player->CanTrack = false;
 		Weapon = Player->WeaponPtr->WeaponMesh;
 		ActorsToIgnore = { MeshComp->GetOwner(), Player->WeaponPtr }; //All the actors that the sword will ignore
 		/*
@@ -53,6 +54,7 @@ void UDF_AttackTracer::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequence
 	if(Player && Player->WeaponPtr->WeaponMesh)
 	{
 		Player->CanDodge = true;
+		Player->CanTrack = true;
 	}
 	
 }

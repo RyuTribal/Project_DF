@@ -60,6 +60,10 @@ public:
 		void LightAttack();
 	UFUNCTION()
 		void StartAttack();
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "TargetLocking")
+		bool IsLocked;
+	UPROPERTY()
+		bool CanTrack;
 	UFUNCTION()
 		virtual FRotator GetDesiredRotation();
 	UPROPERTY(BlueprintReadWrite)
@@ -72,6 +76,7 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+	void TargetLockPressed();
 
 	UPROPERTY(EditAnywhere, Category = "Dodge")
 		float DodgeDistance;
