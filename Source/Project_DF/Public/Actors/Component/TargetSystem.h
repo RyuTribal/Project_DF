@@ -116,6 +116,7 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Target System|Pitch Offset")
 		bool bTargetLocked;
+	void ControlRotation(bool ShouldControlRotation) const;
 
 private:
 	UPROPERTY()
@@ -160,7 +161,6 @@ private:
 	// Actor rotation
 	FRotator GetControlRotationOnTarget(AActor* OtherActor) const;
 	void SetControlRotationOnTarget(AActor* TargetActor) const;
-	void ControlRotation(bool ShouldControlRotation) const;
 
 	float GetAngleUsingCameraRotation(AActor* ActorToLook) const;
 	float GetAngleUsingCharacterRotation(AActor* ActorToLook) const;

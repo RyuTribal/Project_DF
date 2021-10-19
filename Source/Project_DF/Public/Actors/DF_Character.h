@@ -13,6 +13,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/Controller.h"
 #include "Blueprint/UserWidget.h"
+#include "Actors/Component/TargetSystem.h"
 #include "WeaponBase.h"
 #include "DF_Character.generated.h"
 
@@ -70,6 +71,12 @@ public:
 		AWeaponBase* WeaponPtr;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Dodge")
 		bool CanDodge;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Weapon")
+		bool IsEquipped;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Dodge")
+		bool IsDodging;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Movement")
+		bool IsRunning;
 
 
 protected:
@@ -80,9 +87,6 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "Dodge")
 		float DodgeDistance;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Dodge")
-		bool IsDodging;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Dodge")
 		float DodgeDelay;
@@ -97,23 +101,17 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Movement")
 		bool CanEnterIdle;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Movement")
-		bool IsRunning;
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Movement")
 		float SprintSpeed;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Movement")
 		float JogSpeed;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Movement")
 		UAnimMontage* DefaultDodge;
-
 	UPROPERTY()
 		FTimerHandle UnusedDodgeHandle;
 	UPROPERTY()
 		FTimerHandle UnusedMovementHandle;
 	UPROPERTY()
 		float DefaultFriction;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Weapon")
-		bool IsEquipped;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
 		TSubclassOf<AWeaponBase> Weapon;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)

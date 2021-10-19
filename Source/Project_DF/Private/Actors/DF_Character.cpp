@@ -44,12 +44,12 @@ ADF_Character::ADF_Character()
 
 	FollowCamera->bUsePawnControlRotation = false; // Mouse does not move the actual camera
 
+
 	CanMove = true;
 	IsDodging = false;
 	CanDodge = true;
 	IsMoving = false;
 	IsLocked = false;
-	CanTrack = true;
 
 	DodgeDistance = 2500.0f;
 
@@ -64,6 +64,7 @@ ADF_Character::ADF_Character()
 	IsSheathing = false;
 	CurrentAttack = 0;
 	CanAttack = true;
+	CanTrack = true;
 }
 
 // Called when the game starts or when spawned
@@ -135,6 +136,7 @@ void ADF_Character::MoveRight(float Axis)
 
 void ADF_Character::TargetLockPressed()
 {
+
 	UTargetSystem* TargetSystem = FindComponentByClass<UTargetSystem>();
 	TargetSystem->TargetActor();
 }
@@ -176,6 +178,7 @@ void ADF_Character::HandleEquip()
 			if (!IsSheathing) {
 				IsEquipped = false;
 				IsSheathing = true;
+				
 				Animations->Montage_Play(WeaponPtr->Sheathe, 1.f);
 				FOnMontageEnded CompleteDelegate;
 				CompleteDelegate.BindUObject(this, &ADF_Character::OnEquipInterrupt);
@@ -219,6 +222,9 @@ void ADF_Character::Dodge()
 	if (CanDodge && !cMove->IsFalling()) {	// Don't wanna be able to dodge when falling
 		UAnimInstance* Animations = GetMesh()->GetAnimInstance();
 		CanAttack = false;
+		IsDodging = true;
+		CanMove = false;
+		CanDodge = false;
 		if(IsEquipped)
 		{
 			Animations->Montage_Play(WeaponPtr->Dodge);
@@ -232,9 +238,6 @@ void ADF_Character::Dodge()
 		cMove->BrakingFrictionFactor = 0.f; //Removes friction since it messes with how far the character can be launched
 		SetActorRotation(GetDesiredRotation()); // Gets back an input rotation
 		LaunchCharacter(FVector(GetActorForwardVector().X, GetActorForwardVector().Y, 0.f).GetSafeNormal() * DodgeDistance, true, true);
-		IsDodging = true;
-		CanMove = false;
-		CanDodge = false;
 		GetWorldTimerManager().SetTimer(UnusedDodgeHandle, this, &ADF_Character::StopDodge, DodgeDelay, false); //A timer to delay movement and make sure the dodge is executed
 	}
 }
@@ -268,36 +271,16 @@ FRotator ADF_Character::GetDesiredRotation()
 	}
 		
 }
-
 /*
  * Attack functions
  */
 void ADF_Character::LightAttack()
 {
-	if (!CanAttack) {
-		return;
-	}
 	UAnimInstance* Animations = GetMesh()->GetAnimInstance(); // To be able to handle animations
 	/*
-	 * If the weapon is unequiped, this adds the weapon
-	 * to the socket instantly and changes state to
-	 * equipped so that the player isn't animation
-	 * locked.
+	 * If Can attack then plays the start attack
 	 */
-	if(!IsEquipped)
-	{
-		IsEquipped = true;
-		WeaponPtr->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("right_hand_equip"));
-		
-	}
-	if (IsDodging) {
-		StopDodge();
-		StartAttack();
-	}
-	/*
-	 * If there aren't any montages playing it starts the attack.
-	 */
-	if(!Animations->IsAnyMontagePlaying())
+	if(CanAttack)
 	{
 		StartAttack();
 	}
@@ -324,7 +307,9 @@ void ADF_Character::LightAttack()
 					CurrentAttack = 1;
 				}
 				NextSection.AppendInt(CurrentAttack);
+				CanTrack = true;
 				Animations->Montage_JumpToSection(FName(NextSection), Animations->GetCurrentActiveMontage());
+				CanTrack = false;
 			}
 
 		}
@@ -334,7 +319,22 @@ void ADF_Character::LightAttack()
 void ADF_Character::StartAttack()
 {
 	UAnimInstance* Animations = GetMesh()->GetAnimInstance(); // To be able to handle animations
+	/*
+	 * If the weapon is unequiped, this adds the weapon
+	 * to the socket instantly and changes state to
+	 * equipped so that the player isn't animation
+	 * locked.
+	 */
+	
+	if (!IsEquipped)
+	{
+		IsEquipped = true;
+		WeaponPtr->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("right_hand_equip"));
+
+	}
+	CanTrack = false;
 	IsAttacking = true;
+	CanAttack = false;
 	SetActorRotation(GetDesiredRotation());
 	CurrentAttack = 1;
 	Animations->Montage_Play(WeaponPtr->AttackCombo, 1.f); //Plays the attack montage from the start
@@ -346,7 +346,9 @@ void ADF_Character::StartAttack()
 void ADF_Character::OnAttackCompleting(UAnimMontage* animMontage, bool bInterrupted)
 {
 	IsAttacking = false;
+	CanAttack = true;
 	CurrentAttack = 0;
+	CanTrack = true;
 }
 
 

@@ -80,6 +80,10 @@ void UTargetSystem::TickComponent(const float DeltaTime, const ELevelTick TickTy
 				);
 			}
 		}
+		ADF_Character* Character = Cast<ADF_Character>(PlayerController->GetPawn());
+		bShouldControlRotation = Character->IsEquipped && !Character->IsDodging && !Character->IsRunning && Character->CanTrack;
+		ControlRotation(bShouldControlRotation);
+		
 	}
 }
 
@@ -489,15 +493,7 @@ void UTargetSystem::SetControlRotationOnTarget(AActor* TargetActor) const
 	{
 		return;
 	}
-
-	ADF_Character* Character = Cast<ADF_Character>(PlayerController->GetPawn());
-
-
 	const FRotator ControlRotation = GetControlRotationOnTarget(TargetActor);
-
-	if (!Character->CanTrack) {
-		return;
-	}
 	if (OnTargetSetRotation.IsBound())
 	{
 		OnTargetSetRotation.Broadcast(TargetActor, ControlRotation);
