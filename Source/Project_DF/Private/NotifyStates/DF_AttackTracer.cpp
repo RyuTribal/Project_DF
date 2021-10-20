@@ -40,7 +40,7 @@ void UDF_AttackTracer::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenc
 				AActor* HitActor = HitResult[i].GetActor();
 				if (!HitActors.Contains(HitActor)) {
 					HitActors.Add(HitActor);
-					UGameplayStatics::ApplyDamage(HitActor, 10.f, EventInstigator, Player, DamageTypeClass);
+					UGameplayStatics::ApplyDamage(HitActor, Player->WeaponPtr->BaseDamage, EventInstigator, Player, DamageTypeClass);
 				}
 			}
 			LastLocation1 = Weapon->GetSocketLocation("Trace" + j);
@@ -54,5 +54,8 @@ void UDF_AttackTracer::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequence
 	{
 		Player->CanDodge = true;
 	}
+	HitActors.RemoveAll([](AActor* Hit) {
+		return Hit;
+		});
 	
 }
