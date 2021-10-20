@@ -19,6 +19,8 @@ ADF_Character::ADF_Character()
 
 
 	DefaultDodge = CreateDefaultSubobject<UAnimMontage>(TEXT("DefaultDodge"));
+	DefaultHitReaction = CreateDefaultSubobject<UAnimMontage>(TEXT("DefaultHitReaction"));
+	DefaultDeath = CreateDefaultSubobject<UAnimMontage>(TEXT("DefaultDeath"));
 
 	// Remove the mouse restrictions on the camera (mouse moves camera not the character)
 	bUseControllerRotationPitch = false;
@@ -44,7 +46,6 @@ ADF_Character::ADF_Character()
 
 	FollowCamera->bUsePawnControlRotation = false; // Mouse does not move the actual camera
 
-
 	CanMove = true;
 	IsDodging = false;
 	CanDodge = true;
@@ -52,10 +53,9 @@ ADF_Character::ADF_Character()
 	IsLocked = false;
 
 	DodgeDistance = 2500.0f;
-
 	DodgeDelay = 0.2f;
-
 	DodgeCooldown = 0.1f;
+	Health = 100.f;
 	CanEnterIdle = true;
 	JogSpeed = 600.f;
 	SprintSpeed = 1000.f;
@@ -78,6 +78,31 @@ void ADF_Character::BeginPlay()
 	PlayerWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("greatsword-sheathe"));
 	WeaponPtr = PlayerWeapon;
 	
+}
+
+float ADF_Character::TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+{
+	UTargetSystem* TargetSystem = FindComponentByClass<UTargetSystem>();
+	Health -= Damage;
+	if (Health <= 0.f) {
+		
+		GetMesh()->GetAnimInstance()->Montage_Play(DefaultDeath);
+		this->SetActorEnableCollision(false);
+		FOnMontageEnded BlendOutDelegate;
+		BlendOutDelegate.BindUObject(this, &ADF_Character::OnDeath);
+		GetMesh()->GetAnimInstance()->Montage_SetBlendingOutDelegate(BlendOutDelegate, DefaultDeath);
+	}
+	else {
+		GetMesh()->GetAnimInstance()->Montage_Play(DefaultHitReaction);
+	}
+	
+	return 0.0f;
+}
+
+void ADF_Character::OnDeath(UAnimMontage* animMontage, bool bInterrupted)
+{
+	this->Destroy();
+	this->WeaponPtr->Destroy();
 }
 
 // Called every frame
@@ -136,7 +161,6 @@ void ADF_Character::MoveRight(float Axis)
 
 void ADF_Character::TargetLockPressed()
 {
-
 	UTargetSystem* TargetSystem = FindComponentByClass<UTargetSystem>();
 	TargetSystem->TargetActor();
 }
@@ -299,6 +323,7 @@ void ADF_Character::LightAttack()
 			 * "ComboWindow" state. You can check the attack combo montage to see
 			 * how the animations are sectioned.
 			 */
+			
 			FString CurrentSectionPlaying = Animations->Montage_GetCurrentSection(WeaponPtr->AttackCombo).ToString();
 			FString ReferenceSection = TEXT("ComboWindow_");
 			ReferenceSection.AppendInt(CurrentAttack);
@@ -312,14 +337,14 @@ void ADF_Character::LightAttack()
 					CurrentAttack = 1;
 				}
 				NextSection.AppendInt(CurrentAttack);
-				CanTrack = true;
 				Animations->Montage_JumpToSection(FName(NextSection), Animations->GetCurrentActiveMontage());
-				CanTrack = false;
 			}
 
 		}
 	}
 }
+
+
 
 void ADF_Character::StartAttack()
 {
@@ -354,6 +379,3 @@ void ADF_Character::OnAttackCompleting(UAnimMontage* animMontage, bool bInterrup
 	CurrentAttack = 0;
 	CanTrack = true;
 }
-
-
-

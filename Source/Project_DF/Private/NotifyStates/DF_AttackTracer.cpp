@@ -33,17 +33,18 @@ void UDF_AttackTracer::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenc
 			 * Makes a box between the traces of the sockets.
 			 * This makes so that even actors inbetween the traces get hit.
 			 */
-			UKismetSystemLibrary::BoxTraceMulti(Player->GetWorld(), LastLocation1, Weapon->GetSocketLocation("Trace" + j), FVector(5, 30, 50), Weapon->GetComponentRotation(), ETraceTypeQuery::TraceTypeQuery4, false, ActorsToIgnore, EDrawDebugTrace::ForDuration, HitResult, true);
+			UKismetSystemLibrary::BoxTraceMulti(Player->GetWorld(), LastLocation1, LastLocation3, FVector(5, 30, 50), Weapon->GetComponentRotation(), ETraceTypeQuery::TraceTypeQuery4, false, ActorsToIgnore, EDrawDebugTrace::None, HitResult, true);
 			for (int i = 0; i < HitResult.Num(); i++)
 			{
 				// Applies damage to all hit actors
 				AActor* HitActor = HitResult[i].GetActor();
 				if (!HitActors.Contains(HitActor)) {
 					HitActors.Add(HitActor);
-					UGameplayStatics::ApplyDamage(HitActor, 10.f, EventInstigator, Player, DamageTypeClass);
+					UGameplayStatics::ApplyDamage(HitActor, Player->WeaponPtr->BaseDamage, EventInstigator, Player, DamageTypeClass);
 				}
 			}
-			LastLocation1 = Weapon->GetSocketLocation("Trace" + j);
+			LastLocation1 = Weapon->GetSocketLocation("Trace1");
+			LastLocation3 = Weapon->GetSocketLocation("Trace3");
 		}
 	}
 }
@@ -54,5 +55,8 @@ void UDF_AttackTracer::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequence
 	{
 		Player->CanDodge = true;
 	}
+	HitActors.RemoveAll([](AActor* Hit) {
+		return Hit;
+		});
 	
 }

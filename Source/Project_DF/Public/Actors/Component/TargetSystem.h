@@ -28,6 +28,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Target System")
 		bool bShouldControlRotation;
 
+	UPROPERTY()
+		bool CanTrack;
+
 	// The amount of time to break line of sight when actor gets behind an Object.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Target System")
 		float BreakLineOfSightDelay;
@@ -117,6 +120,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Target System|Pitch Offset")
 		bool bTargetLocked;
 	void ControlRotation(bool ShouldControlRotation) const;
+	static FRotator FindLookAtRotation(const FVector Start, const FVector Target);
 
 private:
 	UPROPERTY()
@@ -164,8 +168,6 @@ private:
 
 	float GetAngleUsingCameraRotation(AActor* ActorToLook) const;
 	float GetAngleUsingCharacterRotation(AActor* ActorToLook) const;
-
-	static FRotator FindLookAtRotation(const FVector Start, const FVector Target);
 
 	// Widget
 	void CreateAndAttachTargetLockedOnWidgetComponent(AActor* TargetActor);

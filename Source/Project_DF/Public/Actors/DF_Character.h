@@ -60,6 +60,8 @@ public:
 	UFUNCTION()
 		void LightAttack();
 	UFUNCTION()
+		void TargetLockPressed();
+	UFUNCTION()
 		void StartAttack();
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "TargetLocking")
 		bool IsLocked;
@@ -79,13 +81,13 @@ public:
 		bool IsRunning;
 	UFUNCTION()
 		bool HadMovementInput();
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+		float Health;
 
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-
-	void TargetLockPressed();
 
 	UPROPERTY(EditAnywhere, Category = "Dodge")
 		float DodgeDistance;
@@ -108,6 +110,10 @@ protected:
 		float JogSpeed;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Movement")
 		UAnimMontage* DefaultDodge;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "HitAnims")
+		UAnimMontage* DefaultHitReaction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "HitAnims")
+		UAnimMontage* DefaultDeath;
 	UPROPERTY()
 		FTimerHandle UnusedDodgeHandle;
 	UPROPERTY()
@@ -126,6 +132,10 @@ protected:
 		int CurrentAttack;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Combat")
 		bool CanAttack;
+	UFUNCTION()
+		virtual float TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
+	UFUNCTION()
+		void OnDeath(UAnimMontage* animMontage, bool bInterrupted);
 
 public:
 	// Called every frame

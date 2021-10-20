@@ -31,8 +31,9 @@ UTargetSystem::UTargetSystem()
 	bDesireToSwitch = false;
 	AxisMultiplier = 1.0f;
 	StickyRotationThreshold = 30.0f;
+	CanTrack = true;
 
-	TargetableActors = APawn::StaticClass();
+	TargetableActors = AActor::StaticClass();
 }
 
 // Called when the game starts
@@ -63,6 +64,30 @@ void UTargetSystem::TickComponent(const float DeltaTime, const ELevelTick TickTy
 			TargetLockOff();
 		}
 
+		if(!LockedOnTargetActor->GetActorEnableCollision())
+		{
+			TArray<AActor*> Actors = GetAllActorsOfClass(TargetableActors);
+			TArray<AActor*> ActorsToLook;
+			TArray<AActor*> ActorsToIgnore;
+			for (AActor* Actor : Actors)
+			{
+				const bool bHit = LineTraceForActor(Actor, ActorsToIgnore);
+				if (bHit && IsInViewport(Actor))
+				{
+					ActorsToLook.Add(Actor);
+				}
+			}
+			TArray<AActor*> TargetsInRange = FindTargetsInRange(ActorsToLook, 0, 180);
+			TargetLockOff();
+			if (TargetsInRange.Num() != 0)
+			{
+				AActor* Nearest = FindNearestTarget(TargetsInRange);
+				LockedOnTargetActor = Nearest;
+				TargetLockOn(Nearest);
+			}
+
+		}
+
 		if (ShouldBreakLineOfSight() && !bIsBreakingLineOfSight)
 		{
 			if (BreakLineOfSightDelay <= 0)
@@ -81,8 +106,8 @@ void UTargetSystem::TickComponent(const float DeltaTime, const ELevelTick TickTy
 			}
 		}
 		ADF_Character* Character = Cast<ADF_Character>(PlayerController->GetPawn());
-		bShouldControlRotation = Character->IsEquipped && !Character->IsDodging && !Character->IsRunning && Character->CanTrack;
-		ControlRotation(bShouldControlRotation);
+		CanTrack = bTargetLocked && Character->IsEquipped && !Character->IsDodging && !Character->IsRunning && Character->CanTrack;
+		ControlRotation(CanTrack);
 		
 	}
 }
@@ -500,7 +525,8 @@ void UTargetSystem::SetControlRotationOnTarget(AActor* TargetActor) const
 	}
 	else
 	{
-		PlayerController->SetControlRotation(ControlRotation);
+		FRotator NewRotation = FRotator(0, ControlRotation.Yaw, 0);
+		PlayerController->SetControlRotation(NewRotation);
 	}
 }
 

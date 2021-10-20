@@ -36,5 +36,4 @@ public:
 		UAnimMontage* AttackCombo;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animations")
 		UAnimMontage* Dodge;
-
 };
