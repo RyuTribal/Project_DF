@@ -261,7 +261,7 @@ void ADF_Character::ResetDodge()
 
 FRotator ADF_Character::GetDesiredRotation()
 {
-	if(!GetLastMovementInputVector().Equals(FVector(0.f,0.f,0.f)))
+	if(HadMovementInput())
 	{
 		return UKismetMathLibrary::MakeRotFromX(GetLastMovementInputVector());
 	}
@@ -271,6 +271,12 @@ FRotator ADF_Character::GetDesiredRotation()
 	}
 		
 }
+
+bool ADF_Character::HadMovementInput()
+{
+	return !GetLastMovementInputVector().Equals(FVector(0.f, 0.f, 0.f));
+}
+
 /*
  * Attack functions
  */
@@ -299,7 +305,6 @@ void ADF_Character::LightAttack()
 			if(CurrentSectionPlaying.Equals(ReferenceSection))
 			{
 				//Skips to the next attack so that it doesn't play the end of an attack.
-				SetActorRotation(GetDesiredRotation());
 				FString NextSection = TEXT("Attack_");
 				CurrentAttack = CurrentAttack + 1;
 				if(CurrentAttack > WeaponPtr->AmmountLightAttacks)
@@ -335,7 +340,6 @@ void ADF_Character::StartAttack()
 	CanTrack = false;
 	IsAttacking = true;
 	CanAttack = false;
-	SetActorRotation(GetDesiredRotation());
 	CurrentAttack = 1;
 	Animations->Montage_Play(WeaponPtr->AttackCombo, 1.f); //Plays the attack montage from the start
 	FOnMontageEnded BlendOutDelegate;

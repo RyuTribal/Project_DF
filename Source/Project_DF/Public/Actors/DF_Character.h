@@ -77,6 +77,8 @@ public:
 		bool IsDodging;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Movement")
 		bool IsRunning;
+	UFUNCTION()
+		bool HadMovementInput();
 
 
 protected:
