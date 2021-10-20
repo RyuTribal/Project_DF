@@ -62,6 +62,7 @@ void UTargetSystem::TickComponent(const float DeltaTime, const ELevelTick TickTy
 		if (GetDistanceFromCharacter(LockedOnTargetActor) > MinimumDistanceToEnable)
 		{
 			TargetLockOff();
+			return;
 		}
 
 		if(!LockedOnTargetActor->GetActorEnableCollision())
