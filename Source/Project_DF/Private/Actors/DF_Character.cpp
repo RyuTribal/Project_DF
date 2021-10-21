@@ -65,6 +65,9 @@ ADF_Character::ADF_Character()
 	CurrentAttack = 0;
 	CanAttack = true;
 	CanTrack = true;
+
+	FAxis = 0.f;
+	RAxis = 0.f;
 }
 
 // Called when the game starts or when spawned
@@ -82,7 +85,6 @@ void ADF_Character::BeginPlay()
 
 float ADF_Character::TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
-	UTargetSystem* TargetSystem = FindComponentByClass<UTargetSystem>();
 	Health -= Damage;
 	if (Health <= 0.f) {
 		
@@ -134,6 +136,7 @@ void ADF_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 
 void ADF_Character::MoveForward(float Axis)
 {
+	FAxis = Axis;
 	if(CanMove)
 	{
 		HandleChangeMovement();
@@ -147,6 +150,7 @@ void ADF_Character::MoveForward(float Axis)
 
 void ADF_Character::MoveRight(float Axis)
 {
+	RAxis = Axis;
 	if (CanMove)
 	{
 		HandleChangeMovement();
@@ -251,7 +255,7 @@ void ADF_Character::Dodge()
 		CanDodge = false;
 		if(IsEquipped)
 		{
-			Animations->Montage_Play(WeaponPtr->Dodge);
+			DirectionalDodge();
 		}
 		else
 		{
@@ -270,9 +274,9 @@ void ADF_Character::StopDodge()
 {
 
 	GetCharacterMovement()->StopMovementImmediately(); // This is more of a safety meassure so that no movement is performed before the dodge is complete
+	GetCharacterMovement()->BrakingFrictionFactor = DefaultFriction; // Gives friction back to the character
 	IsDodging = false;
 	CanMove = true;
-	GetCharacterMovement()->BrakingFrictionFactor = DefaultFriction; // Gives friction back to the character
 	GetWorldTimerManager().SetTimer(UnusedDodgeHandle, this, &ADF_Character::ResetDodge, DodgeCooldown, false); // make the dodge have a cool down so people can't spam it
 	
 }
@@ -294,6 +298,43 @@ FRotator ADF_Character::GetDesiredRotation()
 		return GetActorRotation();
 	}
 		
+}
+
+void ADF_Character::DirectionalDodge()
+{
+	UAnimInstance* Animations = GetMesh()->GetAnimInstance();
+	UTargetSystem* TargetSystem = FindComponentByClass<UTargetSystem>();
+	if(TargetSystem && TargetSystem->bTargetLocked)
+	{
+		bool FAxisBigger = UKismetMathLibrary::Abs(FAxis) >= UKismetMathLibrary::Abs(RAxis);
+		if(FAxisBigger)
+		{
+			if(FAxis >= 0)
+			{
+				Animations->Montage_Play(WeaponPtr->FDodge);
+			}
+			else
+			{
+				Animations->Montage_Play(WeaponPtr->BDodge);
+			}
+		}
+		else
+		{
+			if (RAxis >= 0)
+			{
+				Animations->Montage_Play(WeaponPtr->RDodge);
+			}
+			else
+			{
+				Animations->Montage_Play(WeaponPtr->LDodge);
+			}
+		}
+	}
+	else
+	{
+		Animations->Montage_Play(WeaponPtr->FDodge);
+	}
+	
 }
 
 bool ADF_Character::HadMovementInput()

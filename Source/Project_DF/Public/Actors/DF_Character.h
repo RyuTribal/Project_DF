@@ -69,6 +69,8 @@ public:
 		bool CanTrack;
 	UFUNCTION()
 		virtual FRotator GetDesiredRotation();
+	UFUNCTION()
+		void DirectionalDodge();
 	UPROPERTY(BlueprintReadWrite)
 		AWeaponBase* WeaponPtr;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Dodge")
@@ -136,6 +138,10 @@ protected:
 		virtual float TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 	UFUNCTION()
 		void OnDeath(UAnimMontage* animMontage, bool bInterrupted);
+	UPROPERTY()
+		float FAxis;
+	UPROPERTY()
+		float RAxis;
 
 public:
 	// Called every frame
