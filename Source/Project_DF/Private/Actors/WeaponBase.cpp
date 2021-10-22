@@ -18,6 +18,7 @@ AWeaponBase::AWeaponBase()
 	BDodge = CreateDefaultSubobject<UAnimMontage>(TEXT("BDodge"));
 	RDodge = CreateDefaultSubobject<UAnimMontage>(TEXT("RDodge"));
 	LDodge = CreateDefaultSubobject<UAnimMontage>(TEXT("LDodge"));
+	Jump = CreateDefaultSubobject<UAnimMontage>(TEXT("Jump"));
 	RootComponent = WeaponMesh;
 	AmmountLightAttacks = 3;
 }

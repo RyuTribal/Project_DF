@@ -42,4 +42,6 @@ public:
 		UAnimMontage* RDodge;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animations")
 		UAnimMontage* LDodge;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animations")
+		UAnimMontage* Jump;
 };

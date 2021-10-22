@@ -19,6 +19,7 @@ ADF_Character::ADF_Character()
 
 
 	DefaultDodge = CreateDefaultSubobject<UAnimMontage>(TEXT("DefaultDodge"));
+	DefaultJump = CreateDefaultSubobject<UAnimMontage>(TEXT("DefaultJump"));
 	DefaultHitReaction = CreateDefaultSubobject<UAnimMontage>(TEXT("DefaultHitReaction"));
 	DefaultDeath = CreateDefaultSubobject<UAnimMontage>(TEXT("DefaultDeath"));
 
@@ -31,6 +32,7 @@ ADF_Character::ADF_Character()
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 540.0f, 0.0f);
 	// How far he jumps
 	GetCharacterMovement()->JumpZVelocity = 600.0f;
+	GetCharacterMovement()->GravityScale = 2.8f;
 
 	// Sets the spring to the arm component
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
@@ -65,6 +67,7 @@ ADF_Character::ADF_Character()
 	CurrentAttack = 0;
 	CanAttack = true;
 	CanTrack = true;
+	IsFalling = false;
 
 	FAxis = 0.f;
 	RAxis = 0.f;
@@ -105,6 +108,33 @@ void ADF_Character::OnDeath(UAnimMontage* animMontage, bool bInterrupted)
 {
 	this->Destroy();
 	this->WeaponPtr->Destroy();
+}
+
+void ADF_Character::Falling()
+{
+	if (!IsDodging && !IsFalling)
+	{
+		IsFalling = true;
+		GetMesh()->GetAnimInstance()->RootMotionMode = ERootMotionMode::IgnoreRootMotion;
+		if (IsEquipped && WeaponPtr)
+		{
+			GetMesh()->GetAnimInstance()->Montage_Play(WeaponPtr->Jump);
+		}
+		else
+		{
+			GetMesh()->GetAnimInstance()->Montage_Play(DefaultJump);
+		}
+	}
+}
+
+void ADF_Character::Landed(const FHitResult& Hit)
+{
+	if (IsFalling)
+	{
+		IsFalling = false;
+		GetMesh()->GetAnimInstance()->RootMotionMode = ERootMotionMode::RootMotionFromMontagesOnly;
+		GetMesh()->GetAnimInstance()->Montage_JumpToSection(FName("Jump_End"), GetMesh()->GetAnimInstance()->GetCurrentActiveMontage());
+	}
 }
 
 // Called every frame

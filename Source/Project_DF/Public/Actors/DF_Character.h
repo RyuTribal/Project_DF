@@ -85,6 +85,8 @@ public:
 		bool HadMovementInput();
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
 		float Health;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+		bool CanMove;
 
 
 protected:
@@ -99,19 +101,20 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Dodge")
 		float DodgeCooldown;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
-		bool CanMove;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Movement")
 		bool IsMoving;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Movement")
 		bool CanEnterIdle;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Movement")
+		bool IsFalling;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Movement")
 		float SprintSpeed;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Movement")
 		float JogSpeed;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Movement")
 		UAnimMontage* DefaultDodge;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Movement")
+		UAnimMontage* DefaultJump;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "HitAnims")
 		UAnimMontage* DefaultHitReaction;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "HitAnims")
@@ -142,6 +145,10 @@ protected:
 		float FAxis;
 	UPROPERTY()
 		float RAxis;
+	UFUNCTION()
+		virtual void Falling() override;
+	UFUNCTION()
+		virtual void Landed(const FHitResult& Hit) override;
 
 public:
 	// Called every frame
