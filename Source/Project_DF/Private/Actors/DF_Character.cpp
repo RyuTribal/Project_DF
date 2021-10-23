@@ -115,6 +115,7 @@ void ADF_Character::Falling()
 	if (!IsDodging && !IsFalling)
 	{
 		IsFalling = true;
+		GetController()->SetIgnoreMoveInput(true);
 		GetMesh()->GetAnimInstance()->RootMotionMode = ERootMotionMode::IgnoreRootMotion;
 		if (IsEquipped && WeaponPtr)
 		{
@@ -132,6 +133,7 @@ void ADF_Character::Landed(const FHitResult& Hit)
 	if (IsFalling)
 	{
 		IsFalling = false;
+		GetController()->SetIgnoreMoveInput(false);
 		GetMesh()->GetAnimInstance()->RootMotionMode = ERootMotionMode::RootMotionFromMontagesOnly;
 		GetMesh()->GetAnimInstance()->Montage_JumpToSection(FName("Jump_End"), GetMesh()->GetAnimInstance()->GetCurrentActiveMontage());
 	}
@@ -277,25 +279,16 @@ void ADF_Character::OnEquipInterrupt(UAnimMontage* animMontage, bool bInterrupte
 void ADF_Character::Dodge()
 {
 	UCharacterMovementComponent* cMove = GetCharacterMovement(); // Gets the character movement so that we can check if falling or the velocity ect
-	if (CanDodge && !cMove->IsFalling()) {	// Don't wanna be able to dodge when falling
+	if (CanDodge) {	// Don't wanna be able to dodge when falling
 		UAnimInstance* Animations = GetMesh()->GetAnimInstance();
 		CanAttack = false;
 		IsDodging = true;
 		CanMove = false;
 		CanDodge = false;
-		if(IsEquipped)
-		{
-			DirectionalDodge();
-		}
-		else
-		{
-			Animations->Montage_Play(DefaultDodge);
-		}
-		
-		DefaultFriction = cMove->BrakingFrictionFactor;	
+		DefaultFriction = cMove->BrakingFrictionFactor;
 		cMove->BrakingFrictionFactor = 0.f; //Removes friction since it messes with how far the character can be launched
-		SetActorRotation(GetDesiredRotation()); // Gets back an input rotation
-		LaunchCharacter(FVector(GetActorForwardVector().X, GetActorForwardVector().Y, 0.f).GetSafeNormal() * DodgeDistance, true, true);
+		FVector DodgeVector = DirectionalDodge();
+		LaunchCharacter(FVector(DodgeVector.X, DodgeVector.Y, 0.f).GetSafeNormal() * DodgeDistance, true, true);
 		GetWorldTimerManager().SetTimer(UnusedDodgeHandle, this, &ADF_Character::StopDodge, DodgeDelay, false); //A timer to delay movement and make sure the dodge is executed
 	}
 }
@@ -330,40 +323,59 @@ FRotator ADF_Character::GetDesiredRotation()
 		
 }
 
-void ADF_Character::DirectionalDodge()
+FVector ADF_Character::DirectionalDodge()
 {
 	UAnimInstance* Animations = GetMesh()->GetAnimInstance();
 	UTargetSystem* TargetSystem = FindComponentByClass<UTargetSystem>();
-	if(TargetSystem && TargetSystem->bTargetLocked)
+	FVector DodgeVector;
+	if(GetLastMovementInputVector().Size() != 0)
+	{
+		DodgeVector = GetLastMovementInputVector();
+	}
+	else
+	{
+		DodgeVector = GetActorForwardVector();
+	}
+	if(TargetSystem && TargetSystem->bTargetLocked && IsEquipped)
 	{
 		bool FAxisBigger = UKismetMathLibrary::Abs(FAxis) >= UKismetMathLibrary::Abs(RAxis);
+		Animations->Montage_Play(WeaponPtr->MultiDirDodge);
 		if(FAxisBigger)
 		{
 			if(FAxis >= 0)
 			{
-				Animations->Montage_Play(WeaponPtr->FDodge);
+				Animations->Montage_JumpToSection("Dodge_F");
 			}
 			else
 			{
-				Animations->Montage_Play(WeaponPtr->BDodge);
+				Animations->Montage_JumpToSection("Dodge_B");
 			}
 		}
 		else
 		{
 			if (RAxis >= 0)
 			{
-				Animations->Montage_Play(WeaponPtr->RDodge);
+				Animations->Montage_JumpToSection("Dodge_R");
 			}
 			else
 			{
-				Animations->Montage_Play(WeaponPtr->LDodge);
+				Animations->Montage_JumpToSection("Dodge_L");
 			}
 		}
 	}
 	else
 	{
-		Animations->Montage_Play(WeaponPtr->FDodge);
+		if(IsEquipped)
+		{
+			Animations->Montage_Play(WeaponPtr->MultiDirDodge);
+		}
+		else
+		{
+			Animations->Montage_Play(DefaultDodge);
+		}
+		SetActorRotation(GetDesiredRotation()); // Gets back an input rotation
 	}
+	return DodgeVector;
 	
 }
 
@@ -383,7 +395,19 @@ void ADF_Character::LightAttack()
 	 */
 	if(CanAttack)
 	{
-		StartAttack();
+		if(IsRunning)
+		{
+			Animations->Montage_Play(WeaponPtr->RunningAttack);
+		}
+		else if(IsDodging)
+		{
+			Animations->Montage_Play(WeaponPtr->DodgeAttack);
+		}
+		else
+		{
+			StartAttack();
+		}
+		
 	}
 	else
 	{

@@ -17,7 +17,7 @@ void URotateOnInput::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenceB
 	{
 		FRotator NewRotation;
 		UTargetSystem* TargetSys = Owner->FindComponentByClass<UTargetSystem>();
-		if(TargetSys && TargetSys->bTargetLocked && !Owner->HadMovementInput())
+		if(TargetSys && TargetSys->bTargetLocked)
 		{
 			AActor* Target = TargetSys->GetLockedOnTargetActor();
 			NewRotation = FMath::RInterpTo(Owner->GetActorRotation(), TargetSys->FindLookAtRotation(Owner->FindComponentByClass<UCameraComponent>()->GetComponentLocation(), Target->GetActorLocation()), Owner->GetWorld()->DeltaTimeSeconds, 3.f);

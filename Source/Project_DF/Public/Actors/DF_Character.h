@@ -70,7 +70,7 @@ public:
 	UFUNCTION()
 		virtual FRotator GetDesiredRotation();
 	UFUNCTION()
-		void DirectionalDodge();
+		FVector DirectionalDodge();
 	UPROPERTY(BlueprintReadWrite)
 		AWeaponBase* WeaponPtr;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Dodge")

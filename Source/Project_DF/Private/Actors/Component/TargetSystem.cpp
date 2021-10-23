@@ -31,7 +31,7 @@ UTargetSystem::UTargetSystem()
 	bDesireToSwitch = false;
 	AxisMultiplier = 1.0f;
 	StickyRotationThreshold = 30.0f;
-	CanTrack = true;
+	CanTrack = false;
 
 	TargetableActors = AActor::StaticClass();
 }
@@ -108,7 +108,16 @@ void UTargetSystem::TickComponent(const float DeltaTime, const ELevelTick TickTy
 		}
 		ADF_Character* Character = Cast<ADF_Character>(PlayerController->GetPawn());
 		CanTrack = bTargetLocked && Character->IsEquipped && !Character->IsDodging && !Character->IsRunning && Character->CanTrack;
-		ControlRotation(CanTrack);
+		AActor* Target = GetLockedOnTargetActor();
+		if (CanTrack && !Target->GetActorRotation().Equals(Character->GetActorRotation()))
+		{
+			ControlRotation(false);
+			Character->SetActorRotation(GetControlRotationOnTarget(Target));
+		}
+		else
+		{
+			ControlRotation(CanTrack);
+		}
 		
 	}
 }
@@ -340,11 +349,6 @@ void UTargetSystem::TargetLockOn(AActor* TargetToLockOn)
 			CreateAndAttachTargetLockedOnWidgetComponent(TargetToLockOn);
 		}
 
-		if (bShouldControlRotation)
-		{
-			ControlRotation(true);
-		}
-
 		PlayerController->SetIgnoreLookInput(true);
 
 		if (OnTargetLockedOn.IsBound())
@@ -364,10 +368,6 @@ void UTargetSystem::TargetLockOff()
 
 	if (LockedOnTargetActor)
 	{
-		if (bShouldControlRotation)
-		{
-			ControlRotation(false);
-		}
 
 		PlayerController->ResetIgnoreLookInput();
 
