@@ -90,9 +90,8 @@ float ADF_Character::TakeDamage(float Damage, FDamageEvent const& DamageEvent, A
 {
 	Health -= Damage;
 	if (Health <= 0.f) {
-		
 		GetMesh()->GetAnimInstance()->Montage_Play(DefaultDeath);
-		this->SetActorEnableCollision(false);
+		this->SetCanBeDamaged(false);
 		FOnMontageEnded BlendOutDelegate;
 		BlendOutDelegate.BindUObject(this, &ADF_Character::OnDeath);
 		GetMesh()->GetAnimInstance()->Montage_SetBlendingOutDelegate(BlendOutDelegate, DefaultDeath);
@@ -106,8 +105,11 @@ float ADF_Character::TakeDamage(float Damage, FDamageEvent const& DamageEvent, A
 
 void ADF_Character::OnDeath(UAnimMontage* animMontage, bool bInterrupted)
 {
-	this->Destroy();
-	this->WeaponPtr->Destroy();
+	if(!IsPlayerControlled())
+	{
+		this->GetMesh()->SetSimulatePhysics(true);
+	}
+	
 }
 
 void ADF_Character::Falling()
