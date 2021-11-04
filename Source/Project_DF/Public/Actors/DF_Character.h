@@ -35,6 +35,37 @@ public:
 	// The actual camera
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
 		UCameraComponent* FollowCamera;
+
+	// Different body parts
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mesh")
+		USkeletalMeshComponent* ArmorBottom;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mesh")
+		USkeletalMeshComponent* ArmorArms;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mesh")
+		USkeletalMeshComponent* ArmorTorso;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mesh")
+		USkeletalMeshComponent* Body;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mesh")
+		USkeletalMeshComponent* Hair;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mesh")
+		USkeletalMeshComponent* Hand;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mesh")
+		USkeletalMeshComponent* Head;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mesh")
+		USkeletalMeshComponent* Hood;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mesh")
+		USkeletalMeshComponent* Arm;
+
+	virtual void OnConstruction(const FTransform& Transform) override;
+
 	UFUNCTION()
 		void MoveForward(float Axis);
 	UFUNCTION()
@@ -87,6 +118,8 @@ public:
 		float Health;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 		bool CanMove;
+	UPROPERTY()
+		bool IsDead;
 
 
 protected:

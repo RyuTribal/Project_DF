@@ -16,7 +16,29 @@ ADF_Character::ADF_Character()
 
 	// Init the capsule by setting the radius and half height of it
 	GetCapsuleComponent()->InitCapsuleSize(42.0f, 96.0f);
+	ArmorBottom = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("ArmorBottom"));
+	ArmorArms = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("ArmorArms"));
+	ArmorTorso = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("ArmorTorso"));
+	Body = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Body"));
+	Hair = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Hair"));
+	Hand = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Hand"));
+	Head = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Head"));
+	Hood = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Hood"));
+	Arm = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Arm"));
 
+	ArmorBottom->SetupAttachment(GetMesh());
+	ArmorArms->SetupAttachment(GetMesh());
+	ArmorTorso->SetupAttachment(GetMesh());
+	Body->SetupAttachment(GetMesh());
+	Hair->SetupAttachment(GetMesh());
+	Hand->SetupAttachment(GetMesh());
+	Head->SetupAttachment(GetMesh());
+	Hood->SetupAttachment(GetMesh());
+	Arm->SetupAttachment(GetMesh());
+
+	GetMesh()->SetHiddenInGame(true);
+	GetMesh()->ToggleVisibility(true);
+	GetMesh()->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::AlwaysTickPoseAndRefreshBones;
 
 	DefaultDodge = CreateDefaultSubobject<UAnimMontage>(TEXT("DefaultDodge"));
 	DefaultJump = CreateDefaultSubobject<UAnimMontage>(TEXT("DefaultJump"));
@@ -68,15 +90,49 @@ ADF_Character::ADF_Character()
 	CanAttack = true;
 	CanTrack = true;
 	IsFalling = false;
+	IsDead = false;
 
 	FAxis = 0.f;
 	RAxis = 0.f;
+}
+
+// Our construction script
+void ADF_Character::OnConstruction(const FTransform& Transform)
+{
+	if (ArmorBottom->SkeletalMesh) {
+		ArmorBottom->SetMasterPoseComponent(GetMesh());
+	}
+	if (ArmorArms->SkeletalMesh) {
+		ArmorArms->SetMasterPoseComponent(GetMesh());
+	}
+	if (ArmorTorso->SkeletalMesh) {
+		ArmorTorso->SetMasterPoseComponent(GetMesh());
+	}
+	if (Body->SkeletalMesh) {
+		Body->SetMasterPoseComponent(GetMesh());
+	}
+	if (Hair->SkeletalMesh) {
+		Hair->SetMasterPoseComponent(GetMesh());
+	}
+	if (Head->SkeletalMesh) {
+		Head->SetMasterPoseComponent(GetMesh());
+	}
+	if (Hand->SkeletalMesh) {
+		Hand->SetMasterPoseComponent(GetMesh());
+	}
+	if (Arm->SkeletalMesh) {
+		Arm->SetMasterPoseComponent(GetMesh());
+	}
+	if (Hood->SkeletalMesh) {
+		Hood->SetMasterPoseComponent(GetMesh());
+	}
 }
 
 // Called when the game starts or when spawned
 void ADF_Character::BeginPlay()
 {
 	Super::BeginPlay();
+
 	FVector Location(0.0f, 0.0f, 0.0f);
 	FRotator Rotation(0.0f, 0.0f, 0.0f);
 	FActorSpawnParameters SpawnInfo;
@@ -92,6 +148,7 @@ float ADF_Character::TakeDamage(float Damage, FDamageEvent const& DamageEvent, A
 	if (Health <= 0.f) {
 		GetMesh()->GetAnimInstance()->Montage_Play(DefaultDeath);
 		this->SetCanBeDamaged(false);
+		IsDead = true;
 		FOnMontageEnded BlendOutDelegate;
 		BlendOutDelegate.BindUObject(this, &ADF_Character::OnDeath);
 		GetMesh()->GetAnimInstance()->Montage_SetBlendingOutDelegate(BlendOutDelegate, DefaultDeath);
