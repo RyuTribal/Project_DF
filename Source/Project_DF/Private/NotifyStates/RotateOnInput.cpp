@@ -26,7 +26,6 @@ void URotateOnInput::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenceB
 		{
 			NewRotation = FMath::RInterpTo(Owner->GetActorRotation(), Owner->GetDesiredRotation(), Owner->GetWorld()->DeltaTimeSeconds, 3.f);
 		}
-
 		Owner->SetActorRotation(NewRotation);
 		
 		

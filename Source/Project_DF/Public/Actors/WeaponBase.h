@@ -35,5 +35,11 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animations")
 		UAnimMontage* AttackCombo;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animations")
-		UAnimMontage* Dodge;
+		UAnimMontage* MultiDirDodge;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animations")
+		UAnimMontage* Jump;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animations")
+		UAnimMontage* RunningAttack;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animations")
+		UAnimMontage* DodgeAttack;
 };

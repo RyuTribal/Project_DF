@@ -14,7 +14,10 @@ AWeaponBase::AWeaponBase()
 	UnSheathe = CreateDefaultSubobject<UAnimMontage>(TEXT("UnSheathe"));
 	Sheathe = CreateDefaultSubobject<UAnimMontage>(TEXT("Sheathe"));
 	AttackCombo = CreateDefaultSubobject<UAnimMontage>(TEXT("AttackCombo"));
-	Dodge = CreateDefaultSubobject<UAnimMontage>(TEXT("Dodge"));
+	RunningAttack = CreateDefaultSubobject<UAnimMontage>(TEXT("RunningAttack"));
+	DodgeAttack = CreateDefaultSubobject<UAnimMontage>(TEXT("DodgeAttack"));
+	MultiDirDodge = CreateDefaultSubobject<UAnimMontage>(TEXT("MultiDirDodge"));
+	Jump = CreateDefaultSubobject<UAnimMontage>(TEXT("Jump"));
 	RootComponent = WeaponMesh;
 	AmmountLightAttacks = 3;
 }

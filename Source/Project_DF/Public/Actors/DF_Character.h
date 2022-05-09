@@ -14,14 +14,18 @@
 #include "GameFramework/Controller.h"
 #include "Blueprint/UserWidget.h"
 #include "Actors/Component/TargetSystem.h"
+#include "Abilities/DF_GameplayAbility.h"
 #include "WeaponBase.h"
+#include "Abilities/DF_AbilitySystemComponent.h"
+#include "AbilitySystemInterface.h"
+#include "Abilities/DF_AttributeSet.h"
 #include "DF_Character.generated.h"
 
 
 class UCurveFloat;
 
 UCLASS()
-class PROJECT_DF_API ADF_Character : public ACharacter
+class PROJECT_DF_API ADF_Character : public ACharacter, public IAbilitySystemInterface
 {
 	GENERATED_BODY()
 
@@ -35,16 +39,13 @@ public:
 	// The actual camera
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
 		UCameraComponent* FollowCamera;
+
+	virtual void OnConstruction(const FTransform& Transform) override;
+
 	UFUNCTION()
 		void MoveForward(float Axis);
 	UFUNCTION()
 		void MoveRight(float Axis);
-	UFUNCTION()
-		void Dodge();
-	UFUNCTION()
-		void StopDodge();
-	UFUNCTION()
-		void ResetDodge();
 	UFUNCTION()
 		void HandleChangeMovement(); //Handles different variables that are affected by change in character movement
 	UFUNCTION()
@@ -71,8 +72,6 @@ public:
 		virtual FRotator GetDesiredRotation();
 	UPROPERTY(BlueprintReadWrite)
 		AWeaponBase* WeaponPtr;
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Dodge")
-		bool CanDodge;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Weapon")
 		bool IsEquipped;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Dodge")
@@ -81,43 +80,77 @@ public:
 		bool IsRunning;
 	UFUNCTION()
 		bool HadMovementInput();
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
-		float Health;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+		bool CanMove;
+	UPROPERTY()
+		bool IsDead;
+	UPROPERTY()
+		bool IsLockedOn;
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Abilities")
+		class UDF_AbilitySystemComponent* AbilitySystemComponent;
 
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Abilities|Attributes")
+		const UDF_AttributeSet* Attributes;
 
-protected:
+	UFUNCTION(BlueprintPure, Category = "Abilities|Attributes")
+		void GetHealthValues(float& Health, float& MaxHealth);
+
+	UFUNCTION(BlueprintPure, Category = "Abilities|Attributes")
+		void GetStaminaValues(float& Stamina, float& MaxStamina);
+
+	UFUNCTION(BlueprintPure, Category = "Abilities|Attributes")
+		void GetSinValues(float& Sinmeter, float& MaxSinmeter);
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Abilities|Attributes")
+		ESlateVisibility ShowFloatingHealth;
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Abilities")
+		TArray<TSubclassOf<class UDF_GameplayAbility>> DefaultAbilities;
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Abilities")
+		TArray<TSubclassOf<class UGameplayEffect>> DefaultEffects;
+
+	/* Ability system getter */
+	virtual class UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+
+	UFUNCTION()
+		void OnTargetLockedOn(AActor* TargetActor);
+	UFUNCTION()
+		void OnTargetLockedOff(AActor* TargetActor);
+
+	UFUNCTION()
+		void HideHealthBar();
+
+	void GiveStartingAbilities();
+
+	void GiveStartingEffects();
+	UFUNCTION(BlueprintCallable)
+		void AddGameplayEffectToSelf(TSubclassOf<UGameplayEffect> Effect);
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 	UPROPERTY(EditAnywhere, Category = "Dodge")
 		float DodgeDistance;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Dodge")
-		float DodgeDelay;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Dodge")
-		float DodgeCooldown;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
-		bool CanMove;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Movement")
 		bool IsMoving;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Movement")
 		bool CanEnterIdle;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Movement")
+		bool IsFalling;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Movement")
 		float SprintSpeed;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Movement")
 		float JogSpeed;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Movement")
-		UAnimMontage* DefaultDodge;
+		UAnimMontage* DefaultJump;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "HitAnims")
 		UAnimMontage* DefaultHitReaction;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "HitAnims")
 		UAnimMontage* DefaultDeath;
 	UPROPERTY()
-		FTimerHandle UnusedDodgeHandle;
-	UPROPERTY()
 		FTimerHandle UnusedMovementHandle;
+	UPROPERTY()
+		FTimerHandle HealthTimerHandle;
 	UPROPERTY()
 		float DefaultFriction;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
@@ -136,6 +169,14 @@ protected:
 		virtual float TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 	UFUNCTION()
 		void OnDeath(UAnimMontage* animMontage, bool bInterrupted);
+	UPROPERTY()
+		float FAxis;
+	UPROPERTY()
+		float RAxis;
+	UFUNCTION()
+		virtual void Falling() override;
+	UFUNCTION()
+		virtual void Landed(const FHitResult& Hit) override;
 
 public:
 	// Called every frame
