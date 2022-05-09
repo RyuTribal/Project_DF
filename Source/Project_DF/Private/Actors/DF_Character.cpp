@@ -16,34 +16,13 @@ ADF_Character::ADF_Character()
 
 	// Init the capsule by setting the radius and half height of it
 	GetCapsuleComponent()->InitCapsuleSize(42.0f, 96.0f);
-	ArmorBottom = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("ArmorBottom"));
-	ArmorArms = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("ArmorArms"));
-	ArmorTorso = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("ArmorTorso"));
-	Body = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Body"));
-	Hair = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Hair"));
-	Hand = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Hand"));
-	Head = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Head"));
-	Hood = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Hood"));
-	Arm = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Arm"));
 
-	ArmorBottom->SetupAttachment(GetMesh());
-	ArmorArms->SetupAttachment(GetMesh());
-	ArmorTorso->SetupAttachment(GetMesh());
-	Body->SetupAttachment(GetMesh());
-	Hair->SetupAttachment(GetMesh());
-	Hand->SetupAttachment(GetMesh());
-	Head->SetupAttachment(GetMesh());
-	Hood->SetupAttachment(GetMesh());
-	Arm->SetupAttachment(GetMesh());
-
-	GetMesh()->SetHiddenInGame(true);
-	GetMesh()->ToggleVisibility(true);
-	GetMesh()->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::AlwaysTickPoseAndRefreshBones;
-
-	DefaultDodge = CreateDefaultSubobject<UAnimMontage>(TEXT("DefaultDodge"));
 	DefaultJump = CreateDefaultSubobject<UAnimMontage>(TEXT("DefaultJump"));
 	DefaultHitReaction = CreateDefaultSubobject<UAnimMontage>(TEXT("DefaultHitReaction"));
 	DefaultDeath = CreateDefaultSubobject<UAnimMontage>(TEXT("DefaultDeath"));
+
+	AbilitySystemComponent = CreateDefaultSubobject<UDF_AbilitySystemComponent>(TEXT("AbilitySystemComponent"));
+	
 
 	// Remove the mouse restrictions on the camera (mouse moves camera not the character)
 	bUseControllerRotationPitch = false;
@@ -72,14 +51,9 @@ ADF_Character::ADF_Character()
 
 	CanMove = true;
 	IsDodging = false;
-	CanDodge = true;
 	IsMoving = false;
 	IsLocked = false;
-
 	DodgeDistance = 2500.0f;
-	DodgeDelay = 0.2f;
-	DodgeCooldown = 0.1f;
-	Health = 100.f;
 	CanEnterIdle = true;
 	JogSpeed = 600.f;
 	SprintSpeed = 1000.f;
@@ -94,37 +68,114 @@ ADF_Character::ADF_Character()
 
 	FAxis = 0.f;
 	RAxis = 0.f;
+	ShowFloatingHealth = ESlateVisibility::Hidden;
+	IsLockedOn = false;
 }
 
 // Our construction script
 void ADF_Character::OnConstruction(const FTransform& Transform)
 {
-	if (ArmorBottom->SkeletalMesh) {
-		ArmorBottom->SetMasterPoseComponent(GetMesh());
+}
+
+void ADF_Character::GetHealthValues(float& Health, float& MaxHealth)
+{
+	Health = Attributes->GetHealth();
+	MaxHealth = Attributes->GetMaxHealth();
+}
+
+void ADF_Character::GetStaminaValues(float& Stamina, float& MaxStamina)
+{
+	Stamina = Attributes->GetStamina();
+	MaxStamina = Attributes->GetMaxStamina();
+}
+
+void ADF_Character::GetSinValues(float& Sinmeter, float& MaxSinmeter)
+{
+	Sinmeter = Attributes->GetSinmeter();
+	MaxSinmeter = Attributes->GetMaxSinmeter();
+}
+
+UAbilitySystemComponent* ADF_Character::GetAbilitySystemComponent() const
+{
+	return AbilitySystemComponent;
+}
+
+void ADF_Character::OnTargetLockedOn(AActor* TargetActor)
+{
+	ADF_Character* Target = Cast<ADF_Character>(TargetActor);
+	Target->ShowFloatingHealth = ESlateVisibility::Visible;
+	Target->IsLockedOn = true;
+	IsLocked = true;
+	
+}
+
+void ADF_Character::OnTargetLockedOff(AActor* TargetActor)
+{
+	ADF_Character* Target = Cast<ADF_Character>(TargetActor);
+	Target->ShowFloatingHealth = ESlateVisibility::Hidden;
+	Target->IsLockedOn = false;
+	IsLocked = false;
+}
+
+void ADF_Character::HideHealthBar()
+{
+	if(!IsLockedOn)
+	{
+		ShowFloatingHealth = ESlateVisibility::Hidden;
 	}
-	if (ArmorArms->SkeletalMesh) {
-		ArmorArms->SetMasterPoseComponent(GetMesh());
+}
+
+void ADF_Character::GiveStartingAbilities()
+{
+	if(AbilitySystemComponent && InputComponent)
+	{
+		for(TSubclassOf<UDF_GameplayAbility>& StartupAbility : DefaultAbilities)
+		{
+			if (IsValid(StartupAbility))
+			{
+				FGameplayAbilitySpec Spec = FGameplayAbilitySpec(StartupAbility, 1, static_cast<int32>(StartupAbility.GetDefaultObject()->AbilityInputID), this);
+				AbilitySystemComponent->GiveAbility(Spec);
+				if (StartupAbility.GetDefaultObject()->IsPassive)
+				{
+					AbilitySystemComponent->TryActivateAbility(Spec.Handle, false);
+				}
+			}
+		}
+		const FGameplayAbilityInputBinds Binds("Confirm", "Cancel", "EGASAbilityInputID", static_cast<int32>(EGASAbilityInputID::Confirm), static_cast<int32>(EGASAbilityInputID::Cancel));
+		AbilitySystemComponent->BindAbilityActivationToInputComponent(InputComponent, Binds);
 	}
-	if (ArmorTorso->SkeletalMesh) {
-		ArmorTorso->SetMasterPoseComponent(GetMesh());
+}
+
+void ADF_Character::GiveStartingEffects()
+{
+	if (AbilitySystemComponent && DefaultEffects.Num() != 0)
+	{
+		FGameplayEffectContextHandle EffectHandle = AbilitySystemComponent->MakeEffectContext();
+		EffectHandle.AddSourceObject(this);
+		for (TSubclassOf<UGameplayEffect>& StartupEffect : DefaultEffects)
+		{
+			FGameplayEffectSpecHandle DefaultEffectHandle = AbilitySystemComponent->MakeOutgoingSpec(StartupEffect, 1, EffectHandle);
+			if(DefaultEffectHandle.IsValid())
+			{
+				FActiveGameplayEffectHandle ActiveEffect = AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*DefaultEffectHandle.Data.Get());
+			}
+		}
+		
 	}
-	if (Body->SkeletalMesh) {
-		Body->SetMasterPoseComponent(GetMesh());
-	}
-	if (Hair->SkeletalMesh) {
-		Hair->SetMasterPoseComponent(GetMesh());
-	}
-	if (Head->SkeletalMesh) {
-		Head->SetMasterPoseComponent(GetMesh());
-	}
-	if (Hand->SkeletalMesh) {
-		Hand->SetMasterPoseComponent(GetMesh());
-	}
-	if (Arm->SkeletalMesh) {
-		Arm->SetMasterPoseComponent(GetMesh());
-	}
-	if (Hood->SkeletalMesh) {
-		Hood->SetMasterPoseComponent(GetMesh());
+}
+
+void ADF_Character::AddGameplayEffectToSelf(TSubclassOf<UGameplayEffect> Effect)
+{
+	if (AbilitySystemComponent && IsValid(Effect))
+	{
+		FGameplayEffectContextHandle EffectHandle = AbilitySystemComponent->MakeEffectContext();
+		EffectHandle.AddSourceObject(this);
+		FGameplayEffectSpecHandle DefaultEffectHandle = AbilitySystemComponent->MakeOutgoingSpec(Effect, 1, EffectHandle);
+		if (DefaultEffectHandle.IsValid())
+		{
+			FActiveGameplayEffectHandle ActiveEffect = AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*DefaultEffectHandle.Data.Get());
+		}
+
 	}
 }
 
@@ -133,19 +184,33 @@ void ADF_Character::BeginPlay()
 {
 	Super::BeginPlay();
 
-	FVector Location(0.0f, 0.0f, 0.0f);
-	FRotator Rotation(0.0f, 0.0f, 0.0f);
-	FActorSpawnParameters SpawnInfo;
-	AWeaponBase* PlayerWeapon = GetWorld()->SpawnActor<AWeaponBase>(Weapon, Location, Rotation, SpawnInfo);
-	PlayerWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("greatsword-sheathe"));
-	WeaponPtr = PlayerWeapon;
-	
+	if (Weapon)
+	{
+		FVector Location(0.0f, 0.0f, 0.0f);
+		FRotator Rotation(0.0f, 0.0f, 0.0f);
+		FActorSpawnParameters SpawnInfo;
+		AWeaponBase* PlayerWeapon = GetWorld()->SpawnActor<AWeaponBase>(Weapon, Location, Rotation, SpawnInfo);
+		PlayerWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("greatsword-sheathe"));
+		WeaponPtr = PlayerWeapon;
+	}
+	if(IsValid(AbilitySystemComponent))
+	{
+		Attributes = AbilitySystemComponent->GetSet<UDF_AttributeSet>();
+		GiveStartingAbilities();
+		GiveStartingEffects();
+	}
+
+	UTargetSystem* TargetSystem = FindComponentByClass<UTargetSystem>();
+	if(IsValid(TargetSystem))
+	{
+		TargetSystem->OnTargetLockedOn.AddDynamic(this, &ADF_Character::OnTargetLockedOn);
+		TargetSystem->OnTargetLockedOff.AddDynamic(this, &ADF_Character::OnTargetLockedOff);
+	}
 }
 
 float ADF_Character::TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
-	Health -= Damage;
-	if (Health <= 0.f) {
+	/*if (Damage) {
 		GetMesh()->GetAnimInstance()->Montage_Play(DefaultDeath);
 		this->SetCanBeDamaged(false);
 		IsDead = true;
@@ -153,9 +218,18 @@ float ADF_Character::TakeDamage(float Damage, FDamageEvent const& DamageEvent, A
 		BlendOutDelegate.BindUObject(this, &ADF_Character::OnDeath);
 		GetMesh()->GetAnimInstance()->Montage_SetBlendingOutDelegate(BlendOutDelegate, DefaultDeath);
 	}
-	else {
-		GetMesh()->GetAnimInstance()->Montage_Play(DefaultHitReaction);
+	else {*/
+	if(DamageCauser->GetInstigatorController() && ShowFloatingHealth != ESlateVisibility::Visible)
+	{
+		GetWorld()->GetTimerManager().ClearTimer(HealthTimerHandle);
+		ShowFloatingHealth = ESlateVisibility::Visible;
+		FTimerDelegate HealthDelegateHandle;
+		HealthDelegateHandle.BindUFunction(this, FName("HideHealthBar"));
+		GetWorldTimerManager().SetTimer(HealthTimerHandle, HealthDelegateHandle, 1.0f, false);
 	}
+	GetMesh()->GetAnimInstance()->Montage_Play(DefaultHitReaction);
+
+	//}
 	
 	return 0.0f;
 }
@@ -217,7 +291,7 @@ void ADF_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 	PlayerInputComponent->BindAxis("MoveRight", this, &ADF_Character::MoveRight);
 
 	// different inputs
-	PlayerInputComponent->BindAction("Roll", IE_Pressed, this, &ADF_Character::Dodge);
+	//PlayerInputComponent->BindAction("Roll", IE_Pressed, this, &ADF_Character::Dodge);
 	PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &ADF_Character::Sprint);
 	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &ADF_Character::Jog);
 	PlayerInputComponent->BindAction("Equip", IE_Pressed, this, &ADF_Character::HandleEquip);
@@ -331,44 +405,6 @@ void ADF_Character::OnEquipInterrupt(UAnimMontage* animMontage, bool bInterrupte
 	IsSheathing = false;
 }
 
-/*
- * Dodge functions
- */
-
-void ADF_Character::Dodge()
-{
-	UCharacterMovementComponent* cMove = GetCharacterMovement(); // Gets the character movement so that we can check if falling or the velocity ect
-	if (CanDodge) {	// Don't wanna be able to dodge when falling
-		UAnimInstance* Animations = GetMesh()->GetAnimInstance();
-		CanAttack = false;
-		IsDodging = true;
-		CanMove = false;
-		CanDodge = false;
-		DefaultFriction = cMove->BrakingFrictionFactor;
-		cMove->BrakingFrictionFactor = 0.f; //Removes friction since it messes with how far the character can be launched
-		FVector DodgeVector = DirectionalDodge();
-		LaunchCharacter(FVector(DodgeVector.X, DodgeVector.Y, 0.f).GetSafeNormal() * DodgeDistance, true, true);
-		GetWorldTimerManager().SetTimer(UnusedDodgeHandle, this, &ADF_Character::StopDodge, DodgeDelay, false); //A timer to delay movement and make sure the dodge is executed
-	}
-}
-
-void ADF_Character::StopDodge()
-{
-
-	GetCharacterMovement()->StopMovementImmediately(); // This is more of a safety meassure so that no movement is performed before the dodge is complete
-	GetCharacterMovement()->BrakingFrictionFactor = DefaultFriction; // Gives friction back to the character
-	IsDodging = false;
-	CanMove = true;
-	GetWorldTimerManager().SetTimer(UnusedDodgeHandle, this, &ADF_Character::ResetDodge, DodgeCooldown, false); // make the dodge have a cool down so people can't spam it
-	
-}
-
-void ADF_Character::ResetDodge()
-{
-	CanDodge = true;
-	GetWorld()->GetTimerManager().ClearTimer(UnusedDodgeHandle);
-}
-
 FRotator ADF_Character::GetDesiredRotation()
 {
 	if(HadMovementInput())
@@ -382,62 +418,6 @@ FRotator ADF_Character::GetDesiredRotation()
 		
 }
 
-FVector ADF_Character::DirectionalDodge()
-{
-	UAnimInstance* Animations = GetMesh()->GetAnimInstance();
-	UTargetSystem* TargetSystem = FindComponentByClass<UTargetSystem>();
-	FVector DodgeVector;
-	if(GetLastMovementInputVector().Size() != 0)
-	{
-		DodgeVector = GetLastMovementInputVector();
-	}
-	else
-	{
-		DodgeVector = GetActorForwardVector();
-	}
-	if(TargetSystem && TargetSystem->bTargetLocked && IsEquipped)
-	{
-		bool FAxisBigger = UKismetMathLibrary::Abs(FAxis) >= UKismetMathLibrary::Abs(RAxis);
-		Animations->Montage_Play(WeaponPtr->MultiDirDodge);
-		if(FAxisBigger)
-		{
-			if(FAxis >= 0)
-			{
-				Animations->Montage_JumpToSection("Dodge_F");
-			}
-			else
-			{
-				Animations->Montage_JumpToSection("Dodge_B");
-			}
-		}
-		else
-		{
-			if (RAxis >= 0)
-			{
-				Animations->Montage_JumpToSection("Dodge_R");
-			}
-			else
-			{
-				Animations->Montage_JumpToSection("Dodge_L");
-			}
-		}
-	}
-	else
-	{
-		if(IsEquipped)
-		{
-			Animations->Montage_Play(WeaponPtr->MultiDirDodge);
-		}
-		else
-		{
-			Animations->Montage_Play(DefaultDodge);
-		}
-		SetActorRotation(GetDesiredRotation()); // Gets back an input rotation
-	}
-	return DodgeVector;
-	
-}
-
 bool ADF_Character::HadMovementInput()
 {
 	return !GetLastMovementInputVector().Equals(FVector(0.f, 0.f, 0.f));
@@ -448,10 +428,11 @@ bool ADF_Character::HadMovementInput()
  */
 void ADF_Character::LightAttack()
 {
+
 	UAnimInstance* Animations = GetMesh()->GetAnimInstance(); // To be able to handle animations
 	/*
-	 * If Can attack then plays the start attack
-	 */
+	* If Can attack then plays the start attack
+	*/
 	if(CanAttack)
 	{
 		if(IsRunning)
